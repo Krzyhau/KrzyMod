@@ -26,6 +26,7 @@
 #include "Features/Timer/PauseTimer.hpp"
 #include "Features/Timer/Timer.hpp"
 #include "Features/TimescaleDetect.hpp"
+#include "Features/KrzyMod.hpp"
 #include "Game.hpp"
 #include "Hook.hpp"
 #include "Interface.hpp"
@@ -214,7 +215,10 @@ DETOUR(Server::ProcessMovement, void *player, CMoveData *move) {
 	inputHud.SetInputInfo(slot, move->m_nButtons, Vector(move->m_flSideMove, move->m_flForwardMove, move->m_flUpMove));
 	Event::Trigger<Event::PROCESS_MOVEMENT>({ slot, true });
 
-	return Server::ProcessMovement(thisptr, player, move);
+	krzyMod.InvokeProcessMovementEvents(move, true);
+	auto result = Server::ProcessMovement(thisptr, player, move);
+	krzyMod.InvokeProcessMovementEvents(move, false);
+	return result;
 }
 
 ON_INIT {

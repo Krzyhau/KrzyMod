@@ -71,6 +71,13 @@ struct Vector {
 		res.z = z - vec.z;
 		return res;
 	}
+	inline Vector operator*(const Vector vec) const {
+		Vector res;
+		res.x = x * vec.x;
+		res.y = y * vec.y;
+		res.z = z * vec.z;
+		return res;
+	}
 	inline Vector operator-() const {
 		return Vector{0, 0, 0} - *this;
 	}

@@ -430,6 +430,9 @@
     <ClCompile Include="Features\Tas\TasTools\DecelTool.cpp">
       <Filter>SourceAutoRecord\Features\Tas\TasTools</Filter>
     </ClCompile>
+    <ClCompile Include="Features\KrzyMod.cpp">
+      <Filter>SourceAutoRecord\Features</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\minhook\buffer.h">
@@ -1094,6 +1097,9 @@
     </ClInclude>
     <ClInclude Include="Features\Tas\TasTools\DecelTool.hpp">
       <Filter>SourceAutoRecord\Features\Tas\TasTools</Filter>
+    </ClInclude>
+    <ClInclude Include="Features\KrzyMod.hpp">
+      <Filter>SourceAutoRecord\Features</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -20,6 +20,7 @@
 #include "Features/Session.hpp"
 #include "Features/Stats/Sync.hpp"
 #include "Features/Stitcher.hpp"
+#include "Features/KrzyMod.hpp"
 #include "Features/Tas/TasController.hpp"
 #include "Features/Tas/TasPlayer.hpp"
 #include "Game.hpp"
@@ -351,6 +352,7 @@ DETOUR_COMMAND(Client::playvideo_end_level_transition) {
 }
 
 DETOUR(Client::OverrideView, CViewSetup *m_View) {
+	krzyMod.InvokeOverrideCameraEvents(m_View);
 	camera->OverrideView(m_View);
 	Stitcher::OverrideView(m_View);
 	return Client::OverrideView(thisptr, m_View);
