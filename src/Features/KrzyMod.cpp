@@ -375,9 +375,9 @@ CREATE_KRZYMOD_SIMPLE(HUD_PAINT, funDvdLogo, "DVD Logo", 4.5f) {
 
 	// procedurally generating DVD logo.
 	// yes, I'm a madman
-	static int lowResImage = 0;
-	if (lowResImage == 0) {
-		lowResImage = surface->CreateNewTextureID(surface->matsurface->ThisPtr(), true);
+	static int dvdLogoTexID = 0;
+	if (dvdLogoTexID == 0) {
+		dvdLogoTexID = surface->CreateNewTextureID(surface->matsurface->ThisPtr(), true);
 
 		const int texWidth = 248;
 		const int texHeight = 140;
