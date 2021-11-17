@@ -5,7 +5,7 @@
 
 enum KrzyModExecType {
 	UNKNOWN,
-	INSTANT,
+	INITIAL,
 	ENGINE_TICK,
 	PROCESS_MOVEMENT,
 	OVERRIDE_CAMERA,
@@ -41,25 +41,41 @@ struct ActiveKrzyModifier {
 	void Execute(KrzyModExecType type, bool preCall, void* data);
 };
 
+struct KrzyModConvarControl {
+	Variable convar;
+	std::string value;
+	std::string originalValue;
+	float remainingTime;
+	KrzyModifier *parentModifier;
+	KrzyModConvarControl(Variable var, std::string value, float time, KrzyModifier *parent);
+	void Update();
+};
+
 
 
 class KrzyMod : public Hud {
 private:
 	int nextModifierID = 9999;
 	std::list<ActiveKrzyModifier> activeModifiers;
+	std::list<KrzyModConvarControl> convarControllers;
 public:
 	float timer = 0;
 	std::vector<KrzyModifier *> modifiers;
 public:
 	KrzyMod();
+	~KrzyMod();
+	bool IsEnabled();
 	bool ShouldDraw() override;
 	bool GetCurrentSize(int &w, int &h) override;
 	void Paint(int slot) override;
 	void Update();
+	void Stop();
 	void IncreaseTimer(float multipler);
 	void ActivateModifier(KrzyModifier *modifier);
 	void DisableModifier(KrzyModifier *modifier);
 	void AddModifier(KrzyModifier* modifier);
+
+	void AddConvarController(Variable convar, std::string newValue, float time, KrzyModifier *parent);
 	KrzyModifier* GetNextModifier();
 
 	void InvokeProcessMovementEvents(CMoveData *moveData, bool preCall);
@@ -82,4 +98,6 @@ extern KrzyMod krzyMod;
 	}                                                                                                         \
 	void krzymod_##name##_callback2(KrzyModExecInfo info)
 
-#define CREATE_KRZYMOD_INSTANT(name, displayName) CREATE_KRZYMOD_SIMPLE(INSTANT, name, displayName, 0.0f)
+#define CREATE_KRZYMOD_INSTANT(name, displayName) CREATE_KRZYMOD_SIMPLE(INITIAL, name, displayName, 0.0f)
+
+#define KRZYMOD_CONTROL_CVAR(name, value) krzyMod.AddConvarController(Variable(#name), #value, info.endTime, (KrzyModifier *)info.data);

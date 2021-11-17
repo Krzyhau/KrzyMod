@@ -126,6 +126,10 @@ DETOUR_T(bool, Server::CheckJumpButton) {
 	if (server->AllowsMovementChanges()) {
 		auto mv = *reinterpret_cast<CHLMoveData **>((uintptr_t)thisptr + Offsets::mv);
 
+		float oldGravity = sv_gravity.GetFloat();
+
+		sv_gravity.ThisPtr()->m_fValue += (oldGravity * (sar_jump_height.GetFloat()-45.0f)) / 45.0f;
+
 		if (sar_autojump.GetBool() && !server->jumpedLastTime) {
 			mv->m_nOldButtons &= ~IN_JUMP;
 		}
@@ -138,6 +142,8 @@ DETOUR_T(bool, Server::CheckJumpButton) {
 			? Server::CheckJumpButtonBase(thisptr)
 			: Server::CheckJumpButton(thisptr);
 		server->callFromCheckJumpButton = false;
+
+		sv_gravity.ThisPtr()->m_fValue = oldGravity;
 
 		if (jumped) {
 			server->jumpedLastTime = true;
