@@ -212,6 +212,10 @@ namespace Offsets {
 	int GetAllServerClasses;
 	int IsRestoring;
 
+	// CScriptManager
+	int CreateVM;
+	int ScriptRun;
+
 	// CHud
 	int GetName;
 

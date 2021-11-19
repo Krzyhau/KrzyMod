@@ -2,6 +2,8 @@
 
 #include "Hud/Hud.hpp"
 #include <list>
+#include <chrono>
+#include "Utils/TwitchConnection.hpp"
 
 enum KrzyModExecType {
 	UNKNOWN,
@@ -9,35 +11,36 @@ enum KrzyModExecType {
 	ENGINE_TICK,
 	PROCESS_MOVEMENT,
 	OVERRIDE_CAMERA,
-	HUD_PAINT
+	HUD_PAINT,
+	LAST
 };
 
 struct KrzyModExecInfo {
 	KrzyModExecType execType;
 	bool preCall;
-	bool lastCall;
 	float time;
 	float endTime;
 	void* data;
 };
 
 
-class KrzyModifier {
+class KrzyModEffect {
 public:
-	KrzyModifier(std::string name, std::string displayName, float executeTime, void *function);
+	KrzyModEffect(std::string name, std::string displayName, float executeTime, void *function);
 
 public:
 	std::string name;
 	std::string displayName;
-	float executeTime;
+	float durationMultiplier;
 	//modifiers can have different function types depending on the type, trusting the type variable
 	void *function; 
 };
 
-struct ActiveKrzyModifier {
-	KrzyModifier *modifier;
+struct KrzyModActiveEffect {
+	KrzyModEffect *effect;
 	float time;
-	float endTime;
+	float duration;
+	void Update(float dt);
 	void Execute(KrzyModExecType type, bool preCall, void* data);
 };
 
@@ -46,21 +49,39 @@ struct KrzyModConvarControl {
 	std::string value;
 	std::string originalValue;
 	float remainingTime;
-	KrzyModifier *parentModifier;
-	KrzyModConvarControl(Variable var, std::string value, float time, KrzyModifier *parent);
-	void Update();
+	KrzyModEffect *parentEffect;
+	KrzyModConvarControl(Variable var, std::string value, float time, KrzyModEffect *parent);
+	void Update(float dt);
 };
 
+struct KrzyModVote {
+	int voteNumber = 0;
+	KrzyModEffect *effect = nullptr;
+	int votes = 0;
+};
 
 
 class KrzyMod : public Hud {
 private:
-	int nextModifierID = 9999;
-	std::list<ActiveKrzyModifier> activeModifiers;
+	int nextEffectID = -1;
+	KrzyModEffect *selectedEffect = nullptr;
 	std::list<KrzyModConvarControl> convarControllers;
+
+	std::chrono::high_resolution_clock::time_point startTime;
+	std::chrono::high_resolution_clock::time_point startTimeModified;
+	std::chrono::high_resolution_clock::time_point lastUpdate;
+	float duration = 30;
+
+	KrzyModVote oldVotes[4];
+	KrzyModVote votes[4];
+	bool evaluatedVoting = false;
+	TwitchConnection twitchCon;
+	std::vector<std::string> votingPeople;
+
 public:
-	float timer = 0;
-	std::vector<KrzyModifier *> modifiers;
+	std::vector<KrzyModEffect *> effects;
+	std::list<KrzyModActiveEffect> activeEffects;
+
 public:
 	KrzyMod();
 	~KrzyMod();
@@ -70,13 +91,17 @@ public:
 	void Paint(int slot) override;
 	void Update();
 	void Stop();
-	void IncreaseTimer(float multipler);
-	void ActivateModifier(KrzyModifier *modifier);
-	void DisableModifier(KrzyModifier *modifier);
-	void AddModifier(KrzyModifier* modifier);
+	float GetTime(bool modified = false, bool scaled = false);
+	void ResetTimer();
+	void ActivateEffect(KrzyModEffect *effect);
+	void DisableEffect(KrzyModEffect *effect);
+	void AddEffect(KrzyModEffect *effect);
+	
 
-	void AddConvarController(Variable convar, std::string newValue, float time, KrzyModifier *parent);
-	KrzyModifier* GetNextModifier();
+	void AddConvarController(Variable convar, std::string newValue, float time, KrzyModEffect *parent);
+	KrzyModEffect *GetNextEffect(bool increaseCounter = true);
+	void RandomizeEffectOrder();
+	void Vote(int num);
 
 	void InvokeProcessMovementEvents(CMoveData *moveData, bool preCall);
 	void InvokeOverrideCameraEvents(CViewSetup *view);
@@ -86,18 +111,19 @@ public:
 extern KrzyMod krzyMod;
 
 
-#define CREATE_KRZYMOD(name, displayName, executionTime)                                                      \
-	void krzymod_##name##_callback(KrzyModExecInfo info);                                                     \
-	KrzyModifier krzymod_##name = KrzyModifier(#name, displayName, executionTime, krzymod_##name##_callback); \
-	void krzymod_##name##_callback(KrzyModExecInfo info)
+#define KRZYMOD(name) krzymod_##name
+#define CREATE_KRZYMOD(name, displayName, executionTime)                                                         \
+	void KRZYMOD(name)_callback(KrzyModExecInfo info);                                                           \
+	KrzyModEffect *KRZYMOD(name) = new KrzyModEffect(#name, displayName, executionTime, KRZYMOD(name)_callback); \
+	void KRZYMOD(name)_callback(KrzyModExecInfo info)
 
-#define CREATE_KRZYMOD_SIMPLE(type,name, displayName, executionTime)                                          \
-	void krzymod_##name##_callback2(KrzyModExecInfo info);                                                    \
-	CREATE_KRZYMOD(name, displayName, executionTime) {                                                        \
-		if (info.execType == type) krzymod_##name##_callback2(info);                                          \
-	}                                                                                                         \
-	void krzymod_##name##_callback2(KrzyModExecInfo info)
+#define CREATE_KRZYMOD_SIMPLE(type, name, displayName, executionTime)    \
+	void KRZYMOD(name)_callback2(KrzyModExecInfo info);                  \
+	CREATE_KRZYMOD(name, displayName, executionTime) {                   \
+		if (info.execType == type) KRZYMOD(name)_callback2(info);        \
+	}                                                                    \
+	void KRZYMOD(name)_callback2(KrzyModExecInfo info)
 
 #define CREATE_KRZYMOD_INSTANT(name, displayName) CREATE_KRZYMOD_SIMPLE(INITIAL, name, displayName, 0.0f)
 
-#define KRZYMOD_CONTROL_CVAR(name, value) krzyMod.AddConvarController(Variable(#name), #value, info.endTime, (KrzyModifier *)info.data);
+#define KRZYMOD_CONTROL_CVAR(name, value) krzyMod.AddConvarController(Variable(#name), #value, info.endTime, (KrzyModEffect *)info.data);

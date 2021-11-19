@@ -5,6 +5,7 @@
 #include "Modules/Scheme.hpp"
 #include "Modules/Server.hpp"
 #include "Modules/Surface.hpp"
+#include "Modules/VScript.hpp"
 #include "Event.hpp"
 
 #include <random>
@@ -12,104 +13,218 @@
 #include <iterator>
 #include <iostream>
 #include <vector>
+#include <set>
+
+#ifdef _WIN32
+#	define PLAT_CALL(fn, ...) fn(__VA_ARGS__)
+#else
+#	define PLAT_CALL(fn, ...) fn(nullptr, __VA_ARGS__)
+#endif
+
 
 KrzyMod krzyMod;
 
 Variable sar_krzymod_enabled("sar_krzymod_enabled", "0", "Enables KrzyMod (TM).\n");
-Variable sar_krzymod_delaytime("sar_krzymod_delaytime", "30", 1.0f, 3600.0f, "The delay between KrzyMod modifiers, in seconds.\n");
-Variable sar_krzymod_font("sar_krzymod_font", "92", 0, "Change font of KrzyMod.\n");
+Variable sar_krzymod_time_base("sar_krzymod_time_base", "30", 5.0f, 3600.0f, "The base time for all timers in KrzyMod.\n");
+Variable sar_krzymod_timer_multiplier("sar_krzymod_timer_multiplier", "1", 0, "Multiplier for the main KrzyMod timer.\n");
+Variable sar_krzymod_primary_font("sar_krzymod_primary_font", "92", 0, "Change font of KrzyMod.\n");
+Variable sar_krzymod_secondary_font("sar_krzymod_secondary_font", "97", 0, "Change font of KrzyMod.\n");
+Variable sar_krzymod_debug("sar_krzymod_debug", "0", "Debugs KrzyMod.");
+Variable sar_krzymod_double_numbering("sar_krzymod_double_numbering", "0", "Uses different numbers for every voting in KrzyMod");
+Variable sar_krzymod_vote_channel("sar_krzymod_vote_channel", "krzyhau", "Sets a twitch channel from which votes should be read.", 0);
 
-KrzyModifier::KrzyModifier(std::string name, std::string displayName, float executeTime, void *function)
-	: name(name), displayName(displayName), executeTime(executeTime), function(function) {
-	krzyMod.AddModifier(this);
+KrzyModEffect::KrzyModEffect(std::string name, std::string displayName, float durationMultiplier, void *function)
+	: name(name)
+	, displayName(displayName)
+	, durationMultiplier(durationMultiplier)
+	, function(function) {
+	krzyMod.AddEffect(this);
 }
 
-void ActiveKrzyModifier::Execute(KrzyModExecType type, bool preCall, void* data = nullptr) {
-	bool lastCall = time + 1.0f / 60.0f > endTime;
-	((void (*)(KrzyModExecInfo))modifier->function)({type, preCall, lastCall, time, endTime, data});
+void KrzyModActiveEffect::Update(float dt) {
+	time += dt;
+	if (time > duration) Execute(LAST, true, effect);
 }
 
-KrzyModConvarControl::KrzyModConvarControl(Variable var, std::string value, float time, KrzyModifier* parent)
-	: convar(var), value(value), remainingTime(time), parentModifier(parent){
+void KrzyModActiveEffect::Execute(KrzyModExecType type, bool preCall, void *data = nullptr) {
+	((void (*)(KrzyModExecInfo))effect->function)({type, preCall, time, duration, data});
+}
+
+KrzyModConvarControl::KrzyModConvarControl(Variable var, std::string value, float time, KrzyModEffect *parent)
+	: convar(var), value(value), remainingTime(time), parentEffect(parent){
 	originalValue = var.GetString();
 }
 
-void KrzyModConvarControl::Update() {
-	remainingTime -= 1.0f / 60.0f;
+void KrzyModConvarControl::Update(float dt) {
+	remainingTime -= dt;
 
 	if (remainingTime <= 0) {
 		remainingTime = 0;
 		convar.SetValue(originalValue.c_str());
-	} else {
+	} else if (strcmp(convar.GetString(),value.c_str()) != 0) {
 		convar.SetValue(value.c_str());
 	}
 }
 
 
 
+
 KrzyMod::KrzyMod()
 	: Hud(HudType_InGame | HudType_Paused, true) {
 }
-
 KrzyMod::~KrzyMod() {
 	// Making sure the commands are reset to their original values before the plugin is disabled
 	Stop();
 }
-
 bool KrzyMod::ShouldDraw() {
 	return sar_krzymod_enabled.GetBool() && Hud::ShouldDraw() && sv_cheats.GetBool();
 }
+bool KrzyMod::GetCurrentSize(int &w, int &h) {
+	return false;
+}
+
 
 bool KrzyMod::IsEnabled() {
 	return sar_krzymod_enabled.GetBool() && sv_cheats.GetBool() && engine->isRunning() && !engine->IsGamePaused();
 }
 
-bool KrzyMod::GetCurrentSize(int &w, int &h) {
-	return false;
-}
-
+// literally every single bit of logic related to KrzyMod.
 ON_EVENT(PRE_TICK) {krzyMod.Update();}
 void KrzyMod::Update() {
-	if (!IsEnabled()) {
-		timer = 0; 
+	// managing time stuff
+	auto timeNow = std::chrono::high_resolution_clock::now();
+	float deltaTime = ((std::chrono::duration<float>)(timeNow - lastUpdate)).count();
+	lastUpdate = timeNow;
+
+	// stop everything if not enabled, and update the start timer because
+	// i'm too lazy to detect when the mod is being enabled.
+	if (!sar_krzymod_enabled.GetBool()) {
+		ResetTimer();
 		Stop();
-		return;
+	}
+	
+	else {
+		//update twitch connection accordingly
+		if (twitchCon.GetChannel().compare(sar_krzymod_vote_channel.GetString()) != 0) {
+			twitchCon.SetChannel(sar_krzymod_vote_channel.GetString());
+		}
+		if (!twitchCon.IsActive()) twitchCon.Connect();
+
+		// we always want sv_cheats to be enabled when krzymod is enabled. no questions.
+		if (!sv_cheats.GetBool()) sv_cheats.SetValue(true);
 	}
 
-	IncreaseTimer(1);
+	// janky chrono time - don't increase duration if it's not enabled or deltaTime is unreasonably huge
+	if (!IsEnabled() || deltaTime > 0.1) {
+		auto advanceTimespan = std::chrono::duration_cast<std::chrono::high_resolution_clock::duration>(std::chrono::duration<float>(deltaTime));
+		startTimeModified += advanceTimespan;
+		startTime += advanceTimespan;
+	}
+
+	if (!IsEnabled()) return;
+
+	deltaTime = fminf(deltaTime, 0.1f);
+
+	// manipulate second starting time point depending on how values changed
+	if (duration != sar_krzymod_time_base.GetFloat()) {
+		float newTime = (GetTime(true) / duration) * sar_krzymod_time_base.GetFloat();
+		
+		auto newTimespan = std::chrono::duration_cast<std::chrono::high_resolution_clock::duration>(std::chrono::duration<float>(newTime));
+		startTimeModified = timeNow - newTimespan;
+
+		duration = sar_krzymod_time_base.GetFloat();
+	}
+	if (sar_krzymod_timer_multiplier.GetFloat() != 1) {
+		float advanceTime = fabs(sar_krzymod_timer_multiplier.GetFloat() - 1.0f) * deltaTime;
+
+		auto advanceTimespan = std::chrono::duration_cast<std::chrono::high_resolution_clock::duration>(std::chrono::duration<float>(advanceTime));
+		if (sar_krzymod_timer_multiplier.GetFloat() > 0) {
+			startTimeModified -= advanceTimespan;
+		} else {
+			startTimeModified += advanceTimespan;
+		}
+		
+	}
+
 
 	// execute engine tick dependent modifiers and update their timers
-	for (ActiveKrzyModifier &mod : activeModifiers) {
-		mod.Execute(ENGINE_TICK, true);
-		mod.time += 1.0f / 60.0f;
+	for (KrzyModActiveEffect &effect : activeEffects) {
+		effect.Execute(ENGINE_TICK, true);
+		effect.Update(deltaTime);
 	}
 
 	//clear modifiers that expired
-	activeModifiers.remove_if([](const ActiveKrzyModifier &mod) -> bool {
-		return mod.time > mod.endTime;
+	activeEffects.remove_if([](const KrzyModActiveEffect &effect) -> bool {
+		return effect.time > effect.duration;
 	});
 
 	// update cvar controllers
 	for (KrzyModConvarControl &control : convarControllers) {
 		bool hasActiveMod = false;
-		for (ActiveKrzyModifier &mod : activeModifiers) {
-			if (mod.modifier == control.parentModifier) {
+		for (KrzyModActiveEffect &eff : activeEffects) {
+			if (eff.effect == control.parentEffect) {
 				hasActiveMod = true;
 				break;
 			}
 		}
 		if (!hasActiveMod) control.remainingTime = 0;
-		control.Update();
+		control.Update(deltaTime);
 	}
 	convarControllers.remove_if([](const KrzyModConvarControl &con) -> bool {
 		return con.remainingTime <= 0;
 	});
 
-	// adding a new modifier
-	if (timer >= 1) {
-		auto mod = GetNextModifier();
-		ActivateModifier(mod);
-		timer = 0;
+	// resetting timer and activating most voted effect
+	if (GetTime(true) > sar_krzymod_time_base.GetFloat()) {
+		if (selectedEffect != nullptr && evaluatedVoting) {
+			ActivateEffect(selectedEffect);
+			evaluatedVoting = false;
+			votingPeople.clear();
+		}
+		//moving votes to the old votes buffer
+		for (int i = 0; i < 4; i++) {
+			oldVotes[i].effect = votes[i].effect;
+			oldVotes[i].voteNumber = votes[i].voteNumber;
+			oldVotes[i].votes = votes[i].votes;
+
+			votes[i].effect = nullptr;
+		}
+		ResetTimer();
+	}
+
+	// adding new effects for the voting
+	if (votes[0].effect == nullptr) {
+		int beginNumber = (oldVotes[0].voteNumber == 1 && sar_krzymod_double_numbering.GetBool()) ? 5 : 1;
+		for (int i = 0; i < 4; i++) {
+			votes[i].effect = GetNextEffect();
+			votes[i].voteNumber = beginNumber + i;
+			votes[i].votes = 0;
+		}
+	}
+
+	// evaluating the voting
+	if (!evaluatedVoting && sar_krzymod_time_base.GetFloat() - GetTime(true) < 1.0) {
+		//get most voted modifier
+		KrzyModVote *vote = &votes[0];
+		for (int i = 1; i < 4; i++) {
+			if (votes[i].votes > vote->votes) {
+				vote = &votes[i];
+			} else if (votes[i].votes == vote->votes && Math::RandomNumber(0.0f, 1.0f) > 0.5) {
+				vote = &votes[i];
+			}
+		}
+		evaluatedVoting = true;
+		selectedEffect = vote->effect;
+	}
+
+	// getting new votes from Twitch chat
+	auto twitchMsgs = twitchCon.GetNewMessages();
+	for (auto msg : twitchMsgs) {
+		if (std::find(votingPeople.begin(), votingPeople.end(), msg.username) == votingPeople.end()) {
+			votingPeople.push_back(msg.username);
+			int voteNum = std::atoi(msg.message.c_str());
+			krzyMod.Vote(voteNum);
+		}
 	}
 }
 
@@ -117,63 +232,108 @@ void KrzyMod::Stop() {
 	if (convarControllers.size() > 0) {
 		for (KrzyModConvarControl &control : convarControllers) {
 			control.remainingTime = 0;
-			control.Update();
+			control.Update(0);
 		}
 		convarControllers.clear();
 	}
-	if (activeModifiers.size() > 0) {
-		for (KrzyModifier *mod : modifiers) {
-			DisableModifier(mod);
+	if (activeEffects.size() > 0) {
+		for (KrzyModEffect *eff : effects) {
+			DisableEffect(eff);
 		}
-		activeModifiers.clear();
+		activeEffects.clear();
 	}
-	
+	if (twitchCon.IsActive()) twitchCon.Disconnect();
 }
 
-
-void KrzyMod::IncreaseTimer(float multiplier) {
-	timer += (1.0f / (60.0f * sar_krzymod_delaytime.GetFloat())) * multiplier;
+// returns time value of the KrzyMod
+// if modified flag is set, returns value manipulated by multiplier and base time change.
+// if false is given, returns true timespan from the last applied effect
+// if scaled, returns a value from 0 to 1 based on current base time value
+float KrzyMod::GetTime(bool modified, bool scaled) {
+	auto timeNow = std::chrono::high_resolution_clock::now();
+	if (!IsEnabled()) timeNow = lastUpdate; // prevents wacky interface by keeping time interval static when paused.
+	float time = ((std::chrono::duration<float>)(timeNow - (modified ? startTimeModified : startTime))).count();
+	return scaled ? (time / duration) : time;
 }
 
-void KrzyMod::ActivateModifier(KrzyModifier *mod) {
-	float endTime = mod->executeTime == 0 ? 2.5f : mod->executeTime; 
-	ActiveKrzyModifier activeMod = {mod, 0, endTime * sar_krzymod_delaytime.GetFloat()};
-	activeModifiers.push_back(activeMod);
-	activeMod.Execute(INITIAL, true, mod);
+// resets everything time-related
+void KrzyMod::ResetTimer() {
+	auto timeNow = std::chrono::high_resolution_clock::now();
+	startTime = timeNow;
+	startTimeModified = timeNow;
+	duration = sar_krzymod_time_base.GetFloat();
 }
 
-void KrzyMod::DisableModifier(KrzyModifier *modifier) {
-	for (ActiveKrzyModifier &mod : activeModifiers) {
-		if (mod.modifier != modifier) continue;
-		mod.time = mod.endTime;
-		mod.Execute(ENGINE_TICK, false);
+// Activating modifier by adding a new ActiveKrzyModifier into the list
+void KrzyMod::ActivateEffect(KrzyModEffect *effect) {
+	if (sar_krzymod_debug.GetBool()) {
+		//console->Print("Activating KrzyMod effect %s. Next effect: %s\n", mod->displayName.c_str(), GetNextModifier(false)->displayName.c_str());
 	}
-	activeModifiers.remove_if([modifier](const ActiveKrzyModifier &mod) -> bool {
-		return mod.modifier == modifier;
+	// the time is calculated based on own multiplier and base time specified by cvar
+	float durMult = effect->durationMultiplier == 0 ? 2.5f : effect->durationMultiplier; 
+	float duration = durMult * sar_krzymod_time_base.GetFloat();
+	KrzyModActiveEffect activeEffect = {effect, 0, duration};
+	activeEffects.push_back(activeEffect);
+	activeEffect.Execute(INITIAL, true, effect);
+}
+
+// disables modifier and executes it with LAST execute type
+void KrzyMod::DisableEffect(KrzyModEffect *effect) {
+	for (KrzyModActiveEffect &eff : activeEffects) {
+		if (eff.effect != effect) continue;
+		eff.Execute(LAST, false, effect);
+		break;
+	}
+	activeEffects.remove_if([effect](const KrzyModActiveEffect &eff) -> bool {
+		return eff.effect == effect;
 	});
 }
 
-void KrzyMod::AddModifier(KrzyModifier* modifier) {
-	modifiers.push_back(modifier);
+
+// adds modifier to the list of available modifiers. used only when initialized.
+void KrzyMod::AddEffect(KrzyModEffect* effect) {
+	effects.push_back(effect);
 }
 
-KrzyModifier* KrzyMod::GetNextModifier() {
-	nextModifierID++;
-	if (nextModifierID >= modifiers.size()) {
-		std::random_device rd;
-		std::mt19937 g(rd());
-		std::shuffle(modifiers.begin(), modifiers.end(), g);
-		nextModifierID = 0;
+// gets next modifier in a queue and handles queue shuffling if needed.
+KrzyModEffect *KrzyMod::GetNextEffect(bool increaseCounter) {
+	if (nextEffectID == -1) {
+		RandomizeEffectOrder();
 	}
-	return modifiers[nextModifierID];
+	auto mod = effects[nextEffectID];
+	if (increaseCounter) {
+		nextEffectID++;
+		if (nextEffectID >= effects.size()) {
+			RandomizeEffectOrder();
+		}
+	}
+	return mod;
 }
 
-void KrzyMod::AddConvarController(Variable convar, std::string newValue, float time, KrzyModifier* parent) {
+//shuffles modifiers queue
+void KrzyMod::RandomizeEffectOrder() {
+	std::random_device rd;
+	std::mt19937 g(rd());
+	std::shuffle(effects.begin(), effects.end(), g);
+	nextEffectID = 0;
+}
+
+void KrzyMod::Vote(int num) {
+	for (KrzyModVote &vote : votes) {
+		if (vote.voteNumber == num) {
+			vote.votes++;
+			return;
+		}
+	}
+}
+
+// adds convar controller
+void KrzyMod::AddConvarController(Variable convar, std::string newValue, float time, KrzyModEffect* parent) {
 	for (KrzyModConvarControl &control : convarControllers) {
 		if (control.convar.ThisPtr() == convar.ThisPtr()) {
 			control.value = newValue;
 			control.remainingTime = time;
-			control.parentModifier = parent;
+			control.parentEffect = parent;
 			return;
 		}
 	}
@@ -182,36 +342,40 @@ void KrzyMod::AddConvarController(Variable convar, std::string newValue, float t
 }
 
 
+
+// Executed by Server::ProcessMovement
 void KrzyMod::InvokeProcessMovementEvents(CMoveData *moveData, bool preCall) {
 	if (!IsEnabled()) return;
-	for (ActiveKrzyModifier &mod : activeModifiers) {
-		mod.Execute(PROCESS_MOVEMENT, preCall, moveData);
+	for (KrzyModActiveEffect &eff : activeEffects) {
+		eff.Execute(PROCESS_MOVEMENT, preCall, moveData);
 	}
 }
 
+// Executed by Client::OverrideCamera
 void KrzyMod::InvokeOverrideCameraEvents(CViewSetup *view) {
 	if (!IsEnabled()) return;
-	for (ActiveKrzyModifier &mod : activeModifiers) {
-		mod.Execute(OVERRIDE_CAMERA, true, view);
+	for (KrzyModActiveEffect &eff : activeEffects) {
+		eff.Execute(OVERRIDE_CAMERA, true, view);
 	}
 }
 
 
-
+// Paints not only KrzyMod hud but also all of the active effects
 void KrzyMod::Paint(int slot) {
 	if (!sar_krzymod_enabled.GetBool() || !sv_cheats.GetBool()) return;
 
-	auto font = scheme->GetDefaultFont() + sar_krzymod_font.GetInt();
+	auto font = scheme->GetDefaultFont() + sar_krzymod_primary_font.GetInt();
+	auto font2 = scheme->GetDefaultFont() + sar_krzymod_secondary_font.GetInt();
 
 	int lineHeight = surface->GetFontHeight(font);
+	int lineHeight2 = surface->GetFontHeight(font2);
 
 	void *player = server->GetPlayer(slot + 1);
 	if (!player) return;
 
 	// draw modifiers
-	for (ActiveKrzyModifier &mod : activeModifiers) {
-		bool lastCall = mod.time + 1.0f / 60.0f > mod.endTime;
-		((void (*)(KrzyModExecInfo))mod.modifier->function)({HUD_PAINT, true, lastCall, mod.time, mod.endTime});
+	for (KrzyModActiveEffect &eff : activeEffects) {
+		((void (*)(KrzyModExecInfo))eff.effect->function)({HUD_PAINT, true, eff.time, eff.duration});
 	}
 
 	int xScreen, yScreen;
@@ -221,55 +385,191 @@ void KrzyMod::Paint(int slot) {
 	engine->GetScreenSize(nullptr, xScreen, yScreen);
 #endif
 
+	//drawing progress bar
 	surface->DrawRect(Color(0, 0, 0, 192), 0, 0, xScreen, 30);
+	surface->DrawRect(Color(0, 111, 222, 255), 2, 2, (xScreen - 4) * GetTime(true, true) + 2, 28);
 
-	surface->DrawRect(Color(0, 111, 222, 255), 0, 0, xScreen * timer, 30);
 
-	int fontPos = 0;
-	for (ActiveKrzyModifier &mod : activeModifiers) {
-		const char *displayName = mod.modifier->displayName.c_str();
+	auto DrawTextWithShadow = [](int font, float x, float y, Color color, Color shadowColor, const char* text) {
+		surface->DrawTxt(font, x + 2, y + 2, shadowColor, text);
+		surface->DrawTxt(font, x, y, color, text);
+	};
+
+	// drawing voting info
+	KrzyModVote *drawVotes = (GetTime(false) < 0.5) ? oldVotes : votes;
+	if (drawVotes->effect != nullptr) {
+		// calculating voting info
+		int totalVoteCount = 0;
+		float votePercentages[4];
+		
+		for (int i = 0; i < 4; i++) {
+			totalVoteCount += drawVotes[i].votes;
+		}
+		for (int i = 0; i < 4;i++) {
+			votePercentages[i] = (drawVotes[i].votes+1) / (float)(totalVoteCount+4);
+		}
+
+
+		int voteWidth = 400;
+		std::string voteCountText = std::string("Vote count: ") + std::to_string(totalVoteCount);
+		DrawTextWithShadow(font, xScreen - voteWidth - 30, 40, {255, 255, 255}, {0, 0, 0, 220}, voteCountText.c_str());
+
+		// draw actual voting screen
+		for (int i = 0; i < 4; i++) {
+			int yPos = 80 + i * (lineHeight2 + 30);
+
+			// animate x offset for nice slide in and slide out anim
+			float t = fmaxf(0.0, GetTime(false) - i * 0.033);
+			float t1 = fminf(fmaxf(t / 0.4, 0.0), 1.0);
+			float t2 = fminf(fmaxf((t-0.5) / 0.4, 0.0), 1.0);
+			float xOffset = fminf(pow(t1, 2.0), pow(1.0-t2, 2.0));
+
+			int xPos = xScreen - (voteWidth + 30) * (1.0 - xOffset);
+
+			bool isSelected = selectedEffect == drawVotes[i].effect;
+			bool shouldHighlight = !evaluatedVoting || isSelected;
+			surface->DrawRect({64, 64, 64}, xPos, yPos, xPos + voteWidth, yPos + lineHeight2 + 14);
+			surface->DrawRect(
+				shouldHighlight ? Color(0, 111, 222) : Color(111, 111, 111), 
+				xPos, yPos, xPos + voteWidth * (isSelected ? 1.0 : votePercentages[i]), yPos + lineHeight2 + 14
+			);
+
+			std::string strNum = std::to_string(drawVotes[i].voteNumber) + ".";
+			std::string strName = (i == 3) ? "Random Effect" : drawVotes[i].effect->displayName;
+			std::string strPercentage = std::to_string((int)roundf(votePercentages[i] * 100.0f)) + std::string("%%");
+
+			int nameWidth = surface->GetFontLength(font2, strName.c_str());
+			int percWidth = surface->GetFontLength(font2, strPercentage.c_str());
+
+			strPercentage += std::string("%%"); // DrawTxt uses double printf but GetFontLength doesn't
+
+			DrawTextWithShadow(font2, xPos + 10, yPos+7, {255, 255, 255}, {0, 0, 0, 220}, strNum.c_str());
+			DrawTextWithShadow(font2, xPos + (voteWidth - nameWidth) * 0.5, yPos+7, {255, 255, 255}, {0, 0, 0, 220}, strName.c_str());
+			DrawTextWithShadow(font2, xPos + voteWidth - percWidth - 10, yPos+7, {255, 255, 255}, {0, 0, 0, 220}, strPercentage.c_str());
+		}
+	}
+
+
+	// effects are using their own timer for animation, which isn't really smooth.
+	// calculating delta time based on last time they were updated (which is last main update call)
+	float dt = !IsEnabled() ? 0 : ((std::chrono::duration<float>)(std::chrono::high_resolution_clock::now() - lastUpdate)).count();
+
+	// drawing active effects
+	float fontPos = 0;
+	for (KrzyModActiveEffect &eff : activeEffects) {
+		const char *displayName = eff.effect->displayName.c_str();
 		int textWidth = surface->GetFontLength(font, displayName);
-		int textX = xScreen - 30 - textWidth;
-		int textY = 150 + fontPos * (lineHeight + 30);
-		surface->DrawTxt(font, textX, textY, Color(255, 255, 255, 255), displayName);
+		//x pos is adjusted at the beginning for slide-in anim
+		int textX = xScreen - (30 + textWidth) * sin(fminf(eff.time + dt, 1.0) * M_PI * 0.5);
+		int textY = 100 + 4*(lineHeight2 + 30) + fontPos * (lineHeight + 30);
 
-		if (mod.modifier->executeTime > 0) {
-			surface->DrawRect(Color(50, 50, 50, 255), textX, textY + lineHeight, textX + textWidth, textY + lineHeight + 10);
-			surface->DrawRect(Color(0, 111, 222, 255), textX, textY + lineHeight, textX + textWidth * (1.0f - mod.time / mod.endTime), textY + lineHeight + 10);
+		// for slowly disappearing near the end
+		float alpha = fmaxf(fminf(eff.duration - (eff.time + dt), 1.0), 0.0f);
+		int iAlpha = (int)(alpha * 255);
+
+		DrawTextWithShadow(font, textX, textY, {255, 255, 255, iAlpha}, {0, 0, 0, (int)(alpha * 220)}, displayName);
+
+		// effect progress bar
+		if (eff.effect->durationMultiplier > 0) {
+			surface->DrawRect({50, 50, 50, iAlpha}, textX, textY + lineHeight, textX + textWidth, textY + lineHeight + 10);
+			float barVal = (1.0f - (eff.time+dt) / eff.duration);
+			surface->DrawRect({0, 111, 222, iAlpha}, textX, textY + lineHeight, textX + textWidth * barVal, textY + lineHeight + 10);
 		}
 
-		fontPos++;
+		// adjust position of elements below if current one is disappearing
+		if (alpha < 0.5f) {
+			float t = alpha / 0.5f;
+			float val = t < 0.5 ? 4.0 * t * t * t : 1.0 - pow(-2.0 * t + 2.0, 3.0) * 0.5;
+			fontPos += t;
+		} else {
+			fontPos++;
+		}
 	}
 }
 
-CON_COMMAND(sar_krzymod_addmod, "sar_krzymod_activate [modname] - activate mod with given name\n") {
-	if (args.ArgC() != 2) {
-		return console->Print(sar_krzymod_addmod.ThisPtr()->m_pszHelpString);
+DECL_COMMAND_COMPLETION(sar_krzymod_activate) {
+	std::set<std::string> nameList;
+	for (KrzyModEffect *effect : krzyMod.effects) {
+		if (items.size() == COMMAND_COMPLETION_MAXITEMS) {
+			break;
+		}
+		if (std::strstr(effect->name.c_str(), match)) {
+			nameList.insert(effect->name);
+		}
 	}
-	for (KrzyModifier* mod : krzyMod.modifiers) {
-		if (mod->name.compare(args[1]) == 0) {
-			krzyMod.ActivateModifier(mod);
-			console->Print("Activated krzymod \"%s\".\n", args[1]);
+	for (std::string name : nameList) {items.push_back(name);}
+	FINISH_COMMAND_COMPLETION();
+}
+CON_COMMAND_F_COMPLETION(sar_krzymod_activate, 
+	"sar_krzymod_activate [effect] - activate effect with given name\n", 
+	0, AUTOCOMPLETION_FUNCTION(sar_krzymod_activate)
+) {
+	if (args.ArgC() != 2) {
+		return console->Print(sar_krzymod_activate.ThisPtr()->m_pszHelpString);
+	}
+	for (KrzyModEffect *effect : krzyMod.effects) {
+		if (effect->name.compare(args[1]) == 0) {
+			krzyMod.ActivateEffect(effect);
+			console->Print("Activated effect \"%s\".\n", args[1]);
 			return;
 		}
 	}
-	console->Print("Cannot find krzymod \"%s\".\n", args[1]);
+	console->Print("Cannot find effect \"%s\".\n", args[1]);
 }
 
-CON_COMMAND(sar_krzymod_stopmod, "sar_krzymod_stopmod [modname] - stops all instances of a mod with given name\n") {
-	if (args.ArgC() != 2) {
-		return console->Print(sar_krzymod_addmod.ThisPtr()->m_pszHelpString);
+
+
+DECL_COMMAND_COMPLETION(sar_krzymod_deactivate) {
+	std::set<std::string> nameList;
+	for (KrzyModActiveEffect &eff : krzyMod.activeEffects) {
+		if (items.size() == COMMAND_COMPLETION_MAXITEMS) {
+			break;
+		}
+		if (std::strstr(eff.effect->name.c_str(), match)) {
+			nameList.insert(eff.effect->name);
+		}
 	}
-	for (KrzyModifier *mod : krzyMod.modifiers) {
-		if (mod->name.compare(args[1]) == 0) {
-			krzyMod.DisableModifier(mod);
-			console->Print("Stopped krzymod \"%s\".\n", args[1]);
+	for (std::string name : nameList) {
+		items.push_back(name);
+	}
+	FINISH_COMMAND_COMPLETION();
+}
+CON_COMMAND_F_COMPLETION(sar_krzymod_deactivate, 
+	"sar_krzymod_deactivate [effect] - stops all instances of an effect with given name\n", 
+	0, AUTOCOMPLETION_FUNCTION(sar_krzymod_deactivate)
+){
+	if (args.ArgC() != 2) {
+		return console->Print(sar_krzymod_deactivate.ThisPtr()->m_pszHelpString);
+	}
+	for (KrzyModEffect *effect : krzyMod.effects) {
+		if (effect->name.compare(args[1]) == 0) {
+			krzyMod.DisableEffect(effect);
+			console->Print("Stopped effect \"%s\".\n", args[1]);
 			return;
 		}
 	}
-	console->Print("Cannot find krzymod \"%s\".\n", args[1]);
+	console->Print("Cannot find effect \"%s\".\n", args[1]);
 }
 
+CON_COMMAND(sar_krzymod_list, "sar_krzymod_list - shows a list of all effects") {
+	std::set<std::string> nameList;
+	for (KrzyModEffect *effect : krzyMod.effects) {
+		// putting it into the set first to have it ordered alphabetically
+		nameList.insert(effect->name); 
+	}
+	console->Print("KrzyMod currently has %d effects:\n", nameList.size());
+	for (std::string name : nameList) {
+		console->Print(" - %s\n", name.c_str());
+	}
+}
+
+CON_COMMAND(sar_krzymod_vote, "sar_krzymod_vote [number] - votes for an effect with given number") {
+	if (args.ArgC() != 2) {
+		return console->Print(sar_krzymod_vote.ThisPtr()->m_pszHelpString);
+	}
+	int voteNum = std::atoi(args[1]);
+	krzyMod.Vote(voteNum);
+}
 
 
 
@@ -287,8 +587,8 @@ CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveWStuck, "Help My W Is Stuck", 2.5f) 
 
 CREATE_KRZYMOD_SIMPLE(OVERRIDE_CAMERA, viewQuakeFov, "Quake FOV", 3.5f) {
 	auto viewSetup = (CViewSetup *)info.data;
-	viewSetup->fov = 160;
-	viewSetup->fovViewmodel = 120;
+	viewSetup->fov *= 1.6;
+	viewSetup->fovViewmodel *= 1.5;
 }
 
 CREATE_KRZYMOD_SIMPLE(OVERRIDE_CAMERA, viewUpsideDown, "Upside Down View", 2.5f) {
@@ -296,11 +596,15 @@ CREATE_KRZYMOD_SIMPLE(OVERRIDE_CAMERA, viewUpsideDown, "Upside Down View", 2.5f)
 	viewSetup->angles.z += 180;
 }
 
-CREATE_KRZYMOD_SIMPLE(ENGINE_TICK, metaFasterDelay, "x4 KrzyMod Speed", 1.0f) {
-	krzyMod.IncreaseTimer(3);
+CREATE_KRZYMOD_SIMPLE(INITIAL, metaFasterDelay, "x4 KrzyMod Speed", 1.0f) {
+	KRZYMOD_CONTROL_CVAR(sar_krzymod_timer_multiplier, 4);
 }
 
-CREATE_KRZYMOD_SIMPLE(HUD_PAINT, funSnapchatMode, "Snapchat Mode", 2.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, metaPause, "Pause KrzyMod", 1.0f) {
+	KRZYMOD_CONTROL_CVAR(sar_krzymod_timer_multiplier, 0);
+}
+
+CREATE_KRZYMOD_SIMPLE(HUD_PAINT, visualSnapchatMode, "Snapchat Mode", 2.5f) {
 	int xScreen, yScreen;
 #if _WIN32
 	engine->GetScreenSize(xScreen, yScreen);
@@ -330,7 +634,7 @@ CREATE_KRZYMOD_SIMPLE(HUD_PAINT, funSnapchatMode, "Snapchat Mode", 2.5f) {
 	surface->DrawTxt(font, (xScreen - fontWidth) * 0.5f, textYPos + 10.0f, Color(255, 255, 255, 255), lmaoText);
 }
 
-CREATE_KRZYMOD_INSTANT(playerKill, "Kill Player") {
+CREATE_KRZYMOD_INSTANT(playerKill, "kill.") {
 	engine->ExecuteCommand("kill");
 }
 
@@ -365,7 +669,7 @@ CREATE_KRZYMOD(moveInverseControl, "Inverse Controls", 3.5f) {
 	}
 }
 
-CREATE_KRZYMOD_SIMPLE(HUD_PAINT, funDvdLogo, "DVD Logo", 4.5f) {
+CREATE_KRZYMOD_SIMPLE(HUD_PAINT, visualDvdLogo, "DVD Logo", 4.5f) {
 	int xScreen, yScreen;
 #if _WIN32
 	engine->GetScreenSize(xScreen, yScreen);
@@ -442,11 +746,11 @@ CREATE_KRZYMOD_SIMPLE(HUD_PAINT, funDvdLogo, "DVD Logo", 4.5f) {
 	surface->DrawTexturedRect(surface->matsurface->ThisPtr(), posX,posY,posX+dvdWidth,posY+dvdHeight);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, uiHideCrosshair, "Hide Crosshair", 3.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualHideCrosshair, "Hide Crosshair", 3.5f) {
 	KRZYMOD_CONTROL_CVAR(cl_drawhud, 0);
 }
 
-CREATE_KRZYMOD(playerLaunchRandom, "Launch Player Randomly", 0.0f) {
+CREATE_KRZYMOD(playerLaunchRandom, "Yeet Player", 0.0f) {
 	static bool executed = false;
 	if (info.execType == INITIAL) executed = false;
 	if (info.execType == PROCESS_MOVEMENT && !info.preCall && !executed) {
@@ -460,22 +764,28 @@ CREATE_KRZYMOD(playerLaunchRandom, "Launch Player Randomly", 0.0f) {
 	}
 }
 
-CREATE_KRZYMOD(playerLaunchUp, "Launch Player Up", 0.0f) {
+CREATE_KRZYMOD(playerLaunchUp, "Polish Space Program", 0.0f) {
 	static bool executed = false;
 	if (info.execType == INITIAL) executed = false;
 	if (info.execType == PROCESS_MOVEMENT && !info.preCall && !executed) {
 		auto moveData = (CMoveData *)info.data;
-		moveData->m_vecVelocity += Vector(0,0,1000.0f);
+		moveData->m_vecVelocity += Vector(0,0,3600.0f);
 		executed = true;
 	}
 }
 
-CREATE_KRZYMOD(playerReverseVel, "Invert Velocity", 0.0f) {
+CREATE_KRZYMOD(playerUTurn, "U-Turn", 0.0f) {
 	static bool executed = false;
 	if (info.execType == INITIAL) executed = false;
 	if (info.execType == PROCESS_MOVEMENT && !info.preCall && !executed) {
 		auto moveData = (CMoveData *)info.data;
 		moveData->m_vecVelocity = moveData->m_vecVelocity * - 1.0f;
+
+		QAngle viewangles = engine->GetAngles(GET_SLOT());
+		viewangles.y += 180;
+		viewangles.x *= -1;
+		engine->SetAngles(GET_SLOT(), viewangles);
+
 		executed = true;
 	}
 }
@@ -503,19 +813,19 @@ CREATE_KRZYMOD_SIMPLE(INITIAL, moveNoAirlock, "Better Air Control", 3.5f) {
 	KRZYMOD_CONTROL_CVAR(sar_aircontrol, 1);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, gameSmallTimescale, "0.5x Timescale", 1.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, gameSmallTimescale, "Timescale 0.2", 1.5f) {
 	KRZYMOD_CONTROL_CVAR(host_timescale, 0.5);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, gameLargeTimescale, "2x Timescale", 3.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, gameLargeTimescale, "Timescale x2", 2.5f) {
 	KRZYMOD_CONTROL_CVAR(host_timescale, 2);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, gameSmallPhysscale, "0.5x Physics Timescale", 3.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, gameSmallPhysscale, "Slowy Props", 3.5f) {
 	KRZYMOD_CONTROL_CVAR(phys_timescale, 0.5);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, gameLargePhysscale, "2x Physics Timescale", 3.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, gameLargePhysscale, "Speedy Props", 3.5f) {
 	KRZYMOD_CONTROL_CVAR(phys_timescale, 2);
 }
 
@@ -523,17 +833,24 @@ CREATE_KRZYMOD_SIMPLE(INITIAL, gameMaxBounciness, "Maximum Repulsiveness", 3.5f)
 	KRZYMOD_CONTROL_CVAR(bounce_paint_min_speed, 3600);
 }
 
-CREATE_KRZYMOD(moveAutojump, "Autojump", 3.5f) {
+CREATE_KRZYMOD(moveAutojump, "Jump Script", 3.5f) {
 	if (info.execType == INITIAL) {
 		KRZYMOD_CONTROL_CVAR(sar_autojump, 1);
 	}
 	if(info.execType == ENGINE_TICK) {
-		engine->ExecuteCommand(info.lastCall ? "-jump" : "+jump");
+		engine->ExecuteCommand("+jump");
+	}
+	if (info.execType == LAST) {
+		engine->ExecuteCommand("-jump");
 	}
 }
 
 CREATE_KRZYMOD_INSTANT(gameRemovePaint, "Remove All Paint") {
 	engine->ExecuteCommand("removeallpaint");
+}
+
+CREATE_KRZYMOD_INSTANT(gameChangePortalgunLinkage, "These aren't my portals!") {
+	engine->ExecuteCommand("change_portalgun_linkage_id 0 100 1");
 }
 
 CREATE_KRZYMOD(moveDrunk, "Drunk", 3.5f) {
@@ -570,4 +887,200 @@ CREATE_KRZYMOD_SIMPLE(INITIAL, moveMarioJump, "Mario Jump", 3.5f) {
 
 CREATE_KRZYMOD_SIMPLE(INITIAL, moveStanleyParable, "The Stanley Parable", 3.5f) {
 	KRZYMOD_CONTROL_CVAR(sar_jump_height, 0);
+}
+
+
+CREATE_KRZYMOD_SIMPLE(ENGINE_TICK, visualRainbowwPropss, "RainbowwPropss", 4.5f) {
+	float time = engine->GetClientTime();
+
+	for (int i = 0; i < Offsets::NUM_ENT_ENTRIES; ++i) {
+		void *ent = server->m_EntPtrArray[i].m_pEntity;
+		if (!ent) continue;
+
+		const char* entClass = server->GetEntityClassName(ent);
+		if (!std::strstr(entClass, "prop") && !std::strstr(entClass, "npc")) continue;
+
+		float colorVal = fmodf((time + i) * 0.3f, 1.0f);
+
+		Vector color = {
+			fminf(fmaxf(fabs(colorVal * 6.0 - 3.0) - 1.0, 0), 1) * 255,
+			fminf(fmaxf(2.0 - fabs(colorVal * 6.0 - 2.0), 0), 1) * 255,
+			fminf(fmaxf(2.0 - fabs(colorVal * 6.0 - 4.0), 0), 1) * 255
+		};
+
+		PLAT_CALL(server->SetKeyValueVector, ent, "rendercolor", color);
+		//PLAT_CALL(server->SetKeyValueVector, ent, "color", color);
+	}
+}
+
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualBlackout, "Blackout", 2.5f) {
+	KRZYMOD_CONTROL_CVAR(fog_override, 1);
+	KRZYMOD_CONTROL_CVAR(fog_maxdensity, 1);
+	KRZYMOD_CONTROL_CVAR(fog_start, -5000);
+	KRZYMOD_CONTROL_CVAR(fog_end, 200);
+	KRZYMOD_CONTROL_CVAR(fog_color, 0 0 0);
+}
+
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualRtxOn, "RTX On", 2.5f) {
+	KRZYMOD_CONTROL_CVAR(mat_vignette_enable, 1);
+	KRZYMOD_CONTROL_CVAR(mat_bloom_scalefactor_scalar, 10);
+	KRZYMOD_CONTROL_CVAR(mat_motion_blur_strength, 10);
+}
+
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualPS2Graphics, "PS2 Graphics", 2.5f) {
+	KRZYMOD_CONTROL_CVAR(mat_picmip, 4);
+	KRZYMOD_CONTROL_CVAR(r_lod, 3);
+
+}
+
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualGrid, "The Grid", 2.5f) {
+	KRZYMOD_CONTROL_CVAR(mat_luxels, 1);
+}
+
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualHideStatic, "Hide Static World", 2.5f) {
+	KRZYMOD_CONTROL_CVAR(r_portalsopenall, 1);
+	KRZYMOD_CONTROL_CVAR(r_drawworld, 0);
+	KRZYMOD_CONTROL_CVAR(r_drawstaticprops, 0);
+}
+
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualHideDynamic, "Hide Dynamic World", 2.5f) {
+	KRZYMOD_CONTROL_CVAR(r_shadows, 0);
+	KRZYMOD_CONTROL_CVAR(r_drawentities, 0);
+}
+
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualPaintItWhite, "Paint It, White", 2.5f) {
+	KRZYMOD_CONTROL_CVAR(mat_fullbright, 2);
+}
+
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualOrtho, "Orthographic View", 1.5f) {
+	KRZYMOD_CONTROL_CVAR(r_portalsopenall, 1);
+	KRZYMOD_CONTROL_CVAR(sar_cam_ortho, 1);
+	KRZYMOD_CONTROL_CVAR(sar_cam_ortho_nearz, -10000);
+	KRZYMOD_CONTROL_CVAR(cl_skip_player_render_in_main_view, 0);
+}
+
+CREATE_KRZYMOD_SIMPLE(INITIAL, gamePortalMachineGun, "Portal MacHINE GUN!", 2.5f) {
+	KRZYMOD_CONTROL_CVAR(portalgun_fire_delay, 0);
+	KRZYMOD_CONTROL_CVAR(portalgun_held_button_fire_fire_delay, 0);
+}
+
+CREATE_KRZYMOD_INSTANT(gamePressButtons, "Press All Map Buttons") {
+	engine->ExecuteCommand("ent_fire prop_floor_button pressin");
+	engine->ExecuteCommand("ent_fire prop_under_floor_button pressin");
+	engine->ExecuteCommand("ent_fire prop_under_button press");
+	engine->ExecuteCommand("ent_fire prop_button press");
+	engine->ExecuteCommand("ent_fire func_button press");
+}
+
+CREATE_KRZYMOD_INSTANT(gameReleaseButtons, "Release All Map Buttons") {
+	engine->ExecuteCommand("ent_fire prop_floor_button pressout");
+	engine->ExecuteCommand("ent_fire prop_under_floor_button pressout");
+}
+
+CREATE_KRZYMOD_SIMPLE(INITIAL, gameNoFriction, "Caution! Wet Floor!", 3.5f) {
+	KRZYMOD_CONTROL_CVAR(sv_friction, 0.2);
+}
+
+CREATE_KRZYMOD_SIMPLE(INITIAL, gameNegativeFriction, "Weeeeeeeeee!!!", 3.5f) {
+	KRZYMOD_CONTROL_CVAR(sv_friction, -1);
+}
+
+CREATE_KRZYMOD_SIMPLE(INITIAL, gameMoonGravity, "Moon Gravity", 2.5f) {
+	KRZYMOD_CONTROL_CVAR(sv_gravity, 200);
+	KRZYMOD_CONTROL_CVAR(sar_jump_height, 135);
+}
+
+CREATE_KRZYMOD(viewBarrelRoll, "Do A Barrel Roll!", 1.5f) {
+	static int mult = -1;
+	if (info.execType == INITIAL) {
+		mult = Math::RandomNumber(0.0f, 1.0f) > 0.5f ? 1 : -1;
+	}
+	if (info.execType == OVERRIDE_CAMERA) {
+		auto viewSetup = (CViewSetup *)info.data;
+		float t = fmodf(info.time*0.5, 1.0f);
+		float angle = t < 0.5 ? 4.0 * t * t * t : 1.0 - pow(-2.0 * t + 2.0, 3.0) * 0.5;
+
+		viewSetup->angles.z += mult * angle * 360.0f;
+	}
+}
+
+CREATE_KRZYMOD_INSTANT(gameRestartLevel, "restart_level") {
+	engine->ExecuteCommand("restart_level");
+}
+
+CREATE_KRZYMOD_INSTANT(gameLoadQuick, "Load Quicksave") {
+	engine->ExecuteCommand("load quick");
+}
+
+CREATE_KRZYMOD_INSTANT(gameLoadAutosave, "Load Autosave") {
+	engine->ExecuteCommand("load autosave");
+}
+
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualDeepFried, "Deep Fried", 1.5f) {
+	KRZYMOD_CONTROL_CVAR(mat_ambient_light_r, 10);
+	KRZYMOD_CONTROL_CVAR(mat_ambient_light_g, 10);
+	KRZYMOD_CONTROL_CVAR(mat_ambient_light_b, 10);
+}
+
+CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveFallDamage, "Fall Damage", 3.5f) {
+
+	if (info.preCall) return;
+
+	static float velLastFrame = 0;
+	static float lastGroundedState = true;
+
+	void *player = server->GetPlayer(1);
+	if (!player) return;
+	unsigned int groundEntity = *reinterpret_cast<unsigned int *>((uintptr_t)player + Offsets::S_m_hGroundEntity);
+	bool grounded = groundEntity != 0xFFFFFFFF;
+
+	
+
+	if (!lastGroundedState && grounded) {
+		float damage = fmaxf((velLastFrame - 300.0f) * 0.25f, 0);
+		std::string command("hurtme ");
+		command += std::to_string(damage*2);
+		engine->ExecuteCommand(command.c_str());
+	}
+
+	auto moveData = (CMoveData *)info.data;
+	velLastFrame = fabs(moveData->m_vecVelocity.z);
+	lastGroundedState = grounded;
+}
+
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualClaustrophobia, "Claustrophobia", 2.5f) {
+	KRZYMOD_CONTROL_CVAR(r_aspectratio, 6);
+}
+
+CREATE_KRZYMOD(moveSuperhot, "SUPER HOT", 3.5f) {
+	static Vector prevAngles;
+	static float superHotValue;
+	static Variable host_timescale("host_timescale");
+	if (info.execType == INITIAL) {
+		superHotValue = 1;
+	}
+	if (info.execType == PROCESS_MOVEMENT) {
+		if (!info.preCall) return;
+		auto moveData = (CMoveData *)info.data;
+
+		bool shouldIncrease = moveData->m_flForwardMove != 0 || moveData->m_flSideMove != 0;
+
+		Vector newAngles = QAngleToVector(engine->GetAngles(GET_SLOT()));
+		if ((prevAngles - newAngles).Length() > 1) shouldIncrease = true;
+
+		superHotValue = fminf(fmaxf(superHotValue + 0.04 * (shouldIncrease ? 1 : -1), 0.1), 1.0);
+
+		host_timescale.ThisPtr()->m_fValue = superHotValue;
+
+		prevAngles = newAngles;
+	}
+	if (info.execType == LAST) {
+		host_timescale.SetValue(1);
+	}
+}
+
+CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveAlwaysDuck, "I'm A Duck!", 2.5f) {
+	auto moveData = (CMoveData *)info.data;
+	moveData->m_nButtons -= moveData->m_nButtons & IN_JUMP;
+	moveData->m_nButtons |= IN_DUCK;
 }

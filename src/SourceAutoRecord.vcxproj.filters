@@ -433,6 +433,12 @@
     <ClCompile Include="Features\KrzyMod.cpp">
       <Filter>SourceAutoRecord\Features</Filter>
     </ClCompile>
+    <ClCompile Include="Modules\VScript.cpp">
+      <Filter>SourceAutoRecord\Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\TwitchConnection.cpp">
+      <Filter>SourceAutoRecord\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\minhook\buffer.h">
@@ -1100,6 +1106,12 @@
     </ClInclude>
     <ClInclude Include="Features\KrzyMod.hpp">
       <Filter>SourceAutoRecord\Features</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\VScript.hpp">
+      <Filter>SourceAutoRecord\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\TwitchConnection.hpp">
+      <Filter>SourceAutoRecord\Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

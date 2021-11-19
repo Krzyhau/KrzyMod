@@ -213,6 +213,8 @@ void Portal2::LoadOffsets() {
 	GetAllServerClasses = 10;            // CServerGameDLL
 	IsRestoring = 24;                    // CServerGameDLL
 	Think = 31;                          // CServerGameDLL
+	CreateVM = 8;                        // CScriptManager
+	ScriptRun = 8;                       // CScriptManager
 	UTIL_PlayerByIndex = 70;             // CServerGameDLL::Think
 	gpGlobals = 12;                      // UTIL_PlayerByIndex
 	player = 4;                          // CPortalGameMovement::PlayerMove

@@ -256,6 +256,7 @@
     <ClCompile Include="Modules\Surface.cpp" />
     <ClCompile Include="Modules\Tier1.cpp" />
     <ClCompile Include="Modules\VGui.cpp" />
+    <ClCompile Include="Modules\VScript.cpp" />
     <ClCompile Include="Offsets.cpp" />
     <ClCompile Include="Plugin.cpp" />
     <ClCompile Include="SAR.cpp" />
@@ -266,6 +267,7 @@
     <ClCompile Include="Utils\Math.cpp" />
     <ClCompile Include="Utils\Memory.cpp" />
     <ClCompile Include="Utils\SDK.cpp" />
+    <ClCompile Include="Utils\TwitchConnection.cpp" />
     <ClCompile Include="Variable.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -440,6 +442,7 @@
     <ClInclude Include="Modules\Surface.hpp" />
     <ClInclude Include="Modules\Tier1.hpp" />
     <ClInclude Include="Modules\VGui.hpp" />
+    <ClInclude Include="Modules\VScript.hpp" />
     <ClInclude Include="Offsets.hpp" />
     <ClInclude Include="Plugin.hpp" />
     <ClInclude Include="SAR.hpp" />
@@ -450,6 +453,7 @@
     <ClInclude Include="Utils\Memory.hpp" />
     <ClInclude Include="Utils\Platform.hpp" />
     <ClInclude Include="Utils\SDK.hpp" />
+    <ClInclude Include="Utils\TwitchConnection.hpp" />
     <ClInclude Include="Variable.hpp" />
   </ItemGroup>
   <ItemGroup>
