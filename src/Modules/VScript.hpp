@@ -20,7 +20,7 @@ public:
 	void RunScript(const char* script);
 
 	// CScriptManager::CreateVM
-	DECL_DETOUR_STD(void*, CreateVM, int language);
+	DECL_DETOUR_T(void*, CreateVM, int language);
 };
 
 extern VScript* vscript;

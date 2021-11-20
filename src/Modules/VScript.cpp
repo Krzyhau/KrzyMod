@@ -8,8 +8,8 @@
 #include "Engine.hpp"
 
 REDECL(VScript::CreateVM);
-DETOUR_STD(void*, VScript::CreateVM, int language) {
-	auto scriptVM = VScript::CreateVM(language);
+DETOUR_T(void*, VScript::CreateVM, int language) {
+	auto scriptVM = VScript::CreateVM(thisptr, language);
 
 	// if engine state is 4, client-side script VM is created. we want server one
 	if (engine->hoststate->m_currentState != 4) {

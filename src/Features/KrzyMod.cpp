@@ -15,12 +15,6 @@
 #include <vector>
 #include <set>
 
-#ifdef _WIN32
-#	define PLAT_CALL(fn, ...) fn(__VA_ARGS__)
-#else
-#	define PLAT_CALL(fn, ...) fn(nullptr, __VA_ARGS__)
-#endif
-
 
 KrzyMod krzyMod;
 
@@ -379,11 +373,7 @@ void KrzyMod::Paint(int slot) {
 	}
 
 	int xScreen, yScreen;
-#if _WIN32
-	engine->GetScreenSize(xScreen, yScreen);
-#else
 	engine->GetScreenSize(nullptr, xScreen, yScreen);
-#endif
 
 	//drawing progress bar
 	surface->DrawRect(Color(0, 0, 0, 192), 0, 0, xScreen, 30);
@@ -606,11 +596,7 @@ CREATE_KRZYMOD_SIMPLE(INITIAL, metaPause, "Pause KrzyMod", 1.0f) {
 
 CREATE_KRZYMOD_SIMPLE(HUD_PAINT, visualSnapchatMode, "Snapchat Mode", 2.5f) {
 	int xScreen, yScreen;
-#if _WIN32
-	engine->GetScreenSize(xScreen, yScreen);
-#else
 	engine->GetScreenSize(nullptr, xScreen, yScreen);
-#endif
 
 	float ratio = (float)yScreen / (float)xScreen;
 	if (ratio > 1.0f) return;
@@ -657,9 +643,9 @@ CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveStickyGround, "Sticky Ground", 3.5f)
 CREATE_KRZYMOD(moveInverseControl, "Inverse Controls", 3.5f) {
 	if (info.execType == INITIAL) {
 		Variable yaw = Variable("m_yaw");
-		krzyMod.AddConvarController(yaw, std::to_string(yaw.GetFloat() * -1), info.endTime, (KrzyModifier *)info.data);
+		krzyMod.AddConvarController(yaw, std::to_string(yaw.GetFloat() * -1), info.endTime, (KrzyModEffect *)info.data);
 		Variable pitch = Variable("m_pitch");
-		krzyMod.AddConvarController(pitch, std::to_string(pitch.GetFloat() * -1), info.endTime, (KrzyModifier *)info.data);
+		krzyMod.AddConvarController(pitch, std::to_string(pitch.GetFloat() * -1), info.endTime, (KrzyModEffect *)info.data);
 	}
 	if (info.execType == PROCESS_MOVEMENT) {
 		auto moveData = (CMoveData *)info.data;
@@ -671,11 +657,7 @@ CREATE_KRZYMOD(moveInverseControl, "Inverse Controls", 3.5f) {
 
 CREATE_KRZYMOD_SIMPLE(HUD_PAINT, visualDvdLogo, "DVD Logo", 4.5f) {
 	int xScreen, yScreen;
-#if _WIN32
-	engine->GetScreenSize(xScreen, yScreen);
-#else
 	engine->GetScreenSize(nullptr, xScreen, yScreen);
-#endif
 
 	// procedurally generating DVD logo.
 	// yes, I'm a madman
@@ -908,8 +890,7 @@ CREATE_KRZYMOD_SIMPLE(ENGINE_TICK, visualRainbowwPropss, "RainbowwPropss", 4.5f)
 			fminf(fmaxf(2.0 - fabs(colorVal * 6.0 - 4.0), 0), 1) * 255
 		};
 
-		PLAT_CALL(server->SetKeyValueVector, ent, "rendercolor", color);
-		//PLAT_CALL(server->SetKeyValueVector, ent, "color", color);
+		server->SetKeyValueVector(nullptr, ent, "rendercolor", color);
 	}
 }
 
