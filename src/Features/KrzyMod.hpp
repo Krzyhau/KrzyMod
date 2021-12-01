@@ -26,12 +26,13 @@ struct KrzyModExecInfo {
 
 class KrzyModEffect {
 public:
-	KrzyModEffect(std::string name, std::string displayName, float executeTime, void *function);
+	KrzyModEffect(std::string name, std::string displayName, float executeTime, int groupID, void *function);
 
 public:
 	std::string name;
 	std::string displayName;
 	float durationMultiplier;
+	int groupID;
 	//modifiers can have different function types depending on the type, trusting the type variable
 	void *function; 
 };
@@ -112,18 +113,18 @@ extern KrzyMod krzyMod;
 
 
 #define KRZYMOD(name) krzymod_##name
-#define CREATE_KRZYMOD(name, displayName, executionTime)                                                         \
-	void KRZYMOD(name)_callback(KrzyModExecInfo info);                                                           \
-	KrzyModEffect *KRZYMOD(name) = new KrzyModEffect(#name, displayName, executionTime, KRZYMOD(name)_callback); \
+#define CREATE_KRZYMOD(name, displayName, executionTime, groupID)                                                         \
+	void KRZYMOD(name)_callback(KrzyModExecInfo info);                                                                    \
+	KrzyModEffect *KRZYMOD(name) = new KrzyModEffect(#name, displayName, executionTime, groupID, KRZYMOD(name)_callback); \
 	void KRZYMOD(name)_callback(KrzyModExecInfo info)
 
-#define CREATE_KRZYMOD_SIMPLE(type, name, displayName, executionTime)    \
-	void KRZYMOD(name)_callback2(KrzyModExecInfo info);                  \
-	CREATE_KRZYMOD(name, displayName, executionTime) {                   \
-		if (info.execType == type) KRZYMOD(name)_callback2(info);        \
-	}                                                                    \
+#define CREATE_KRZYMOD_SIMPLE(type, name, displayName, executionTime, groupID)    \
+	void KRZYMOD(name)_callback2(KrzyModExecInfo info);                           \
+	CREATE_KRZYMOD(name, displayName, executionTime, groupID) {                   \
+		if (info.execType == type) KRZYMOD(name)_callback2(info);                 \
+	}                                                                             \
 	void KRZYMOD(name)_callback2(KrzyModExecInfo info)
 
-#define CREATE_KRZYMOD_INSTANT(name, displayName) CREATE_KRZYMOD_SIMPLE(INITIAL, name, displayName, 0.0f)
+#define CREATE_KRZYMOD_INSTANT(name, displayName, groupID) CREATE_KRZYMOD_SIMPLE(INITIAL, name, displayName, 0.0f, groupID)
 
 #define KRZYMOD_CONTROL_CVAR(name, value) krzyMod.AddConvarController(Variable(#name), #value, info.endTime, (KrzyModEffect *)info.data);

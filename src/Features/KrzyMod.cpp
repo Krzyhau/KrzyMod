@@ -27,7 +27,7 @@ Variable sar_krzymod_debug("sar_krzymod_debug", "0", "Debugs KrzyMod.");
 Variable sar_krzymod_double_numbering("sar_krzymod_double_numbering", "0", "Uses different numbers for every voting in KrzyMod");
 Variable sar_krzymod_vote_channel("sar_krzymod_vote_channel", "krzyhau", "Sets a twitch channel from which votes should be read.", 0);
 
-KrzyModEffect::KrzyModEffect(std::string name, std::string displayName, float durationMultiplier, void *function)
+KrzyModEffect::KrzyModEffect(std::string name, std::string displayName, float durationMultiplier, int groupID, void *function)
 	: name(name)
 	, displayName(displayName)
 	, durationMultiplier(durationMultiplier)
@@ -190,9 +190,28 @@ void KrzyMod::Update() {
 	if (votes[0].effect == nullptr) {
 		int beginNumber = (oldVotes[0].voteNumber == 1 && sar_krzymod_double_numbering.GetBool()) ? 5 : 1;
 		for (int i = 0; i < 4; i++) {
-			votes[i].effect = GetNextEffect();
 			votes[i].voteNumber = beginNumber + i;
 			votes[i].votes = 0;
+
+			//make sure that new effects are not interfering already active ones
+			int safetyCounter = 0;
+			bool groupMemberUsed;
+			do {
+				safetyCounter++;
+				groupMemberUsed = false;
+				votes[i].effect = GetNextEffect();
+				int groupID = votes[i].effect->groupID;
+				if (groupID != 0) {
+					for (auto& activeEffect : activeEffects) {
+						if (activeEffect.effect->groupID == groupID) {
+							groupMemberUsed = true;
+							break;
+						}
+					}
+				}
+			} while (groupMemberUsed && safetyCounter < effects.size() - 1);
+			
+			
 		}
 	}
 
@@ -569,32 +588,32 @@ CON_COMMAND(sar_krzymod_vote, "sar_krzymod_vote [number] - votes for an effect w
 
 
 
-CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveWStuck, "Help My W Is Stuck", 2.5f) {
+CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveWStuck, "Help My W Is Stuck", 2.5f, 0) {
 	if (!info.preCall) return;
 	auto moveData = (CMoveData *)info.data;
 	moveData->m_flForwardMove += 175.0f;
 }
 
-CREATE_KRZYMOD_SIMPLE(OVERRIDE_CAMERA, viewQuakeFov, "Quake FOV", 3.5f) {
+CREATE_KRZYMOD_SIMPLE(OVERRIDE_CAMERA, viewQuakeFov, "Quake FOV", 3.5f, 0) {
 	auto viewSetup = (CViewSetup *)info.data;
 	viewSetup->fov *= 1.6;
 	viewSetup->fovViewmodel *= 1.5;
 }
 
-CREATE_KRZYMOD_SIMPLE(OVERRIDE_CAMERA, viewUpsideDown, "Upside Down View", 2.5f) {
+CREATE_KRZYMOD_SIMPLE(OVERRIDE_CAMERA, viewUpsideDown, "Upside Down View", 2.5f, 0) {
 	auto viewSetup = (CViewSetup *)info.data;
 	viewSetup->angles.z += 180;
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, metaFasterDelay, "x4 KrzyMod Speed", 1.0f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, metaFasterDelay, "x4 KrzyMod Speed", 1.0f, 1) {
 	KRZYMOD_CONTROL_CVAR(sar_krzymod_timer_multiplier, 4);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, metaPause, "Pause KrzyMod", 1.0f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, metaPause, "Pause KrzyMod", 1.0f, 1) {
 	KRZYMOD_CONTROL_CVAR(sar_krzymod_timer_multiplier, 0);
 }
 
-CREATE_KRZYMOD_SIMPLE(HUD_PAINT, visualSnapchatMode, "Snapchat Mode", 2.5f) {
+CREATE_KRZYMOD_SIMPLE(HUD_PAINT, visualSnapchatMode, "Snapchat Mode", 2.5f, 0) {
 	int xScreen, yScreen;
 	engine->GetScreenSize(nullptr, xScreen, yScreen);
 
@@ -620,11 +639,11 @@ CREATE_KRZYMOD_SIMPLE(HUD_PAINT, visualSnapchatMode, "Snapchat Mode", 2.5f) {
 	surface->DrawTxt(font, (xScreen - fontWidth) * 0.5f, textYPos + 10.0f, Color(255, 255, 255, 255), lmaoText);
 }
 
-CREATE_KRZYMOD_INSTANT(playerKill, "kill.") {
+CREATE_KRZYMOD_INSTANT(playerKill, "kill.", 0) {
 	engine->ExecuteCommand("kill");
 }
 
-CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveStickyGround, "Sticky Ground", 3.5f) {
+CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveStickyGround, "Sticky Ground", 3.5f, 0) {
 	void *player = server->GetPlayer(1);
 	if (!player) return;
 	unsigned int groundEntity = *reinterpret_cast<unsigned int *>((uintptr_t)player + Offsets::S_m_hGroundEntity);
@@ -640,7 +659,7 @@ CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveStickyGround, "Sticky Ground", 3.5f)
 	}
 }
 
-CREATE_KRZYMOD(moveInverseControl, "Inverse Controls", 3.5f) {
+CREATE_KRZYMOD(moveInverseControl, "Inverse Controls", 3.5f, 0) {
 	if (info.execType == INITIAL) {
 		Variable yaw = Variable("m_yaw");
 		krzyMod.AddConvarController(yaw, std::to_string(yaw.GetFloat() * -1), info.endTime, (KrzyModEffect *)info.data);
@@ -655,7 +674,7 @@ CREATE_KRZYMOD(moveInverseControl, "Inverse Controls", 3.5f) {
 	}
 }
 
-CREATE_KRZYMOD_SIMPLE(HUD_PAINT, visualDvdLogo, "DVD Logo", 4.5f) {
+CREATE_KRZYMOD_SIMPLE(HUD_PAINT, visualDvdLogo, "DVD Logo", 4.5f, 0) {
 	int xScreen, yScreen;
 	engine->GetScreenSize(nullptr, xScreen, yScreen);
 
@@ -728,11 +747,11 @@ CREATE_KRZYMOD_SIMPLE(HUD_PAINT, visualDvdLogo, "DVD Logo", 4.5f) {
 	surface->DrawTexturedRect(surface->matsurface->ThisPtr(), posX,posY,posX+dvdWidth,posY+dvdHeight);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, visualHideCrosshair, "Hide Crosshair", 3.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualHideCrosshair, "Hide Crosshair", 3.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(cl_drawhud, 0);
 }
 
-CREATE_KRZYMOD(playerLaunchRandom, "Yeet Player", 0.0f) {
+CREATE_KRZYMOD(playerLaunchRandom, "Yeet Player", 0.0f, 0) {
 	static bool executed = false;
 	if (info.execType == INITIAL) executed = false;
 	if (info.execType == PROCESS_MOVEMENT && !info.preCall && !executed) {
@@ -746,7 +765,7 @@ CREATE_KRZYMOD(playerLaunchRandom, "Yeet Player", 0.0f) {
 	}
 }
 
-CREATE_KRZYMOD(playerLaunchUp, "Polish Space Program", 0.0f) {
+CREATE_KRZYMOD(playerLaunchUp, "Polish Space Program", 0.0f, 0) {
 	static bool executed = false;
 	if (info.execType == INITIAL) executed = false;
 	if (info.execType == PROCESS_MOVEMENT && !info.preCall && !executed) {
@@ -756,7 +775,7 @@ CREATE_KRZYMOD(playerLaunchUp, "Polish Space Program", 0.0f) {
 	}
 }
 
-CREATE_KRZYMOD(playerUTurn, "U-Turn", 0.0f) {
+CREATE_KRZYMOD(playerUTurn, "U-Turn", 0.0f, 0) {
 	static bool executed = false;
 	if (info.execType == INITIAL) executed = false;
 	if (info.execType == PROCESS_MOVEMENT && !info.preCall && !executed) {
@@ -772,7 +791,7 @@ CREATE_KRZYMOD(playerUTurn, "U-Turn", 0.0f) {
 	}
 }
 
-CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveAirlock, "No Air Control", 3.5f) {
+CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveAirlock, "No Air Control", 3.5f, 0) {
 	void *player = server->GetPlayer(1);
 	if (!player) return;
 	unsigned int groundEntity = *reinterpret_cast<unsigned int *>((uintptr_t)player + Offsets::S_m_hGroundEntity);
@@ -786,36 +805,36 @@ CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveAirlock, "No Air Control", 3.5f) {
 	}
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, moveAbh, "ABH", 3.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, moveAbh, "ABH", 3.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(sar_duckjump, 1);
 	KRZYMOD_CONTROL_CVAR(sar_jumpboost, 1);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, moveNoAirlock, "Better Air Control", 3.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, moveNoAirlock, "Better Air Control", 3.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(sar_aircontrol, 1);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, gameSmallTimescale, "Timescale 0.2", 1.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, gameSmallTimescale, "Timescale 0.2", 1.5f, 2) {
 	KRZYMOD_CONTROL_CVAR(host_timescale, 0.5);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, gameLargeTimescale, "Timescale x2", 2.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, gameLargeTimescale, "Timescale x2", 2.5f, 2) {
 	KRZYMOD_CONTROL_CVAR(host_timescale, 2);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, gameSmallPhysscale, "Slowy Props", 3.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, gameSmallPhysscale, "Slowy Props", 3.5f, 3) {
 	KRZYMOD_CONTROL_CVAR(phys_timescale, 0.5);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, gameLargePhysscale, "Speedy Props", 3.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, gameLargePhysscale, "Speedy Props", 3.5f, 3) {
 	KRZYMOD_CONTROL_CVAR(phys_timescale, 2);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, gameMaxBounciness, "Maximum Repulsiveness", 3.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, gameMaxBounciness, "Maximum Repulsiveness", 3.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(bounce_paint_min_speed, 3600);
 }
 
-CREATE_KRZYMOD(moveAutojump, "Jump Script", 3.5f) {
+CREATE_KRZYMOD(moveAutojump, "Jump Script", 3.5f, 0) {
 	if (info.execType == INITIAL) {
 		KRZYMOD_CONTROL_CVAR(sar_autojump, 1);
 	}
@@ -827,15 +846,15 @@ CREATE_KRZYMOD(moveAutojump, "Jump Script", 3.5f) {
 	}
 }
 
-CREATE_KRZYMOD_INSTANT(gameRemovePaint, "Remove All Paint") {
+CREATE_KRZYMOD_INSTANT(gameRemovePaint, "Remove All Paint", 0) {
 	engine->ExecuteCommand("removeallpaint");
 }
 
-CREATE_KRZYMOD_INSTANT(gameChangePortalgunLinkage, "These aren't my portals!") {
+CREATE_KRZYMOD_INSTANT(gameChangePortalgunLinkage, "These aren't my portals!", 0) {
 	engine->ExecuteCommand("change_portalgun_linkage_id 0 100 1");
 }
 
-CREATE_KRZYMOD(moveDrunk, "Drunk", 3.5f) {
+CREATE_KRZYMOD(moveDrunk, "Drunk", 3.5f, 0) {
 
 	float time = engine->GetClientTime() * 0.3f;
 	float td = fmin((info.endTime-info.time)*0.1,fmin(info.time * 0.2, 1.0));
@@ -863,16 +882,16 @@ CREATE_KRZYMOD(moveDrunk, "Drunk", 3.5f) {
 	}
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, moveMarioJump, "Mario Jump", 3.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, moveMarioJump, "Mario Jump", 3.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(sar_jump_height, 150);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, moveStanleyParable, "The Stanley Parable", 3.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, moveStanleyParable, "The Stanley Parable", 3.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(sar_jump_height, 0);
 }
 
 
-CREATE_KRZYMOD_SIMPLE(ENGINE_TICK, visualRainbowwPropss, "RainbowwPropss", 4.5f) {
+CREATE_KRZYMOD_SIMPLE(ENGINE_TICK, visualRainbowwPropss, "RainbowwPropss", 4.5f, 0) {
 	float time = engine->GetClientTime();
 
 	for (int i = 0; i < Offsets::NUM_ENT_ENTRIES; ++i) {
@@ -894,7 +913,7 @@ CREATE_KRZYMOD_SIMPLE(ENGINE_TICK, visualRainbowwPropss, "RainbowwPropss", 4.5f)
 	}
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, visualBlackout, "Blackout", 2.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualBlackout, "Blackout", 2.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(fog_override, 1);
 	KRZYMOD_CONTROL_CVAR(fog_maxdensity, 1);
 	KRZYMOD_CONTROL_CVAR(fog_start, -5000);
@@ -902,50 +921,50 @@ CREATE_KRZYMOD_SIMPLE(INITIAL, visualBlackout, "Blackout", 2.5f) {
 	KRZYMOD_CONTROL_CVAR(fog_color, 0 0 0);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, visualRtxOn, "RTX On", 2.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualRtxOn, "RTX On", 2.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(mat_vignette_enable, 1);
 	KRZYMOD_CONTROL_CVAR(mat_bloom_scalefactor_scalar, 10);
 	KRZYMOD_CONTROL_CVAR(mat_motion_blur_strength, 10);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, visualPS2Graphics, "PS2 Graphics", 2.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualPS2Graphics, "PS2 Graphics", 2.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(mat_picmip, 4);
 	KRZYMOD_CONTROL_CVAR(r_lod, 3);
 
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, visualGrid, "The Grid", 2.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualGrid, "The Grid", 2.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(mat_luxels, 1);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, visualHideStatic, "Hide Static World", 2.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualHideStatic, "Hide Static World", 2.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(r_portalsopenall, 1);
 	KRZYMOD_CONTROL_CVAR(r_drawworld, 0);
 	KRZYMOD_CONTROL_CVAR(r_drawstaticprops, 0);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, visualHideDynamic, "Hide Dynamic World", 2.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualHideDynamic, "Hide Dynamic World", 2.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(r_shadows, 0);
 	KRZYMOD_CONTROL_CVAR(r_drawentities, 0);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, visualPaintItWhite, "Paint It, White", 2.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualPaintItWhite, "Paint It, White", 2.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(mat_fullbright, 2);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, visualOrtho, "Orthographic View", 1.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualOrtho, "Orthographic View", 1.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(r_portalsopenall, 1);
 	KRZYMOD_CONTROL_CVAR(sar_cam_ortho, 1);
 	KRZYMOD_CONTROL_CVAR(sar_cam_ortho_nearz, -10000);
 	KRZYMOD_CONTROL_CVAR(cl_skip_player_render_in_main_view, 0);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, gamePortalMachineGun, "Portal MacHINE GUN!", 2.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, gamePortalMachineGun, "Portal MacHINE GUN!", 2.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(portalgun_fire_delay, 0);
 	KRZYMOD_CONTROL_CVAR(portalgun_held_button_fire_fire_delay, 0);
 }
 
-CREATE_KRZYMOD_INSTANT(gamePressButtons, "Press All Map Buttons") {
+CREATE_KRZYMOD_INSTANT(gamePressButtons, "Press All Map Buttons", 0) {
 	engine->ExecuteCommand("ent_fire prop_floor_button pressin");
 	engine->ExecuteCommand("ent_fire prop_under_floor_button pressin");
 	engine->ExecuteCommand("ent_fire prop_under_button press");
@@ -953,25 +972,25 @@ CREATE_KRZYMOD_INSTANT(gamePressButtons, "Press All Map Buttons") {
 	engine->ExecuteCommand("ent_fire func_button press");
 }
 
-CREATE_KRZYMOD_INSTANT(gameReleaseButtons, "Release All Map Buttons") {
+CREATE_KRZYMOD_INSTANT(gameReleaseButtons, "Release All Map Buttons", 0) {
 	engine->ExecuteCommand("ent_fire prop_floor_button pressout");
 	engine->ExecuteCommand("ent_fire prop_under_floor_button pressout");
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, gameNoFriction, "Caution! Wet Floor!", 3.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, gameNoFriction, "Caution! Wet Floor!", 3.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(sv_friction, 0.2);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, gameNegativeFriction, "Weeeeeeeeee!!!", 3.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, gameNegativeFriction, "Weeeeeeeeee!!!", 3.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(sv_friction, -1);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, gameMoonGravity, "Moon Gravity", 2.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, gameMoonGravity, "Moon Gravity", 2.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(sv_gravity, 200);
 	KRZYMOD_CONTROL_CVAR(sar_jump_height, 135);
 }
 
-CREATE_KRZYMOD(viewBarrelRoll, "Do A Barrel Roll!", 1.5f) {
+CREATE_KRZYMOD(viewBarrelRoll, "Do A Barrel Roll!", 1.5f, 0) {
 	static int mult = -1;
 	if (info.execType == INITIAL) {
 		mult = Math::RandomNumber(0.0f, 1.0f) > 0.5f ? 1 : -1;
@@ -985,25 +1004,25 @@ CREATE_KRZYMOD(viewBarrelRoll, "Do A Barrel Roll!", 1.5f) {
 	}
 }
 
-CREATE_KRZYMOD_INSTANT(gameRestartLevel, "restart_level") {
+CREATE_KRZYMOD_INSTANT(gameRestartLevel, "restart_level", 0) {
 	engine->ExecuteCommand("restart_level");
 }
 
-CREATE_KRZYMOD_INSTANT(gameLoadQuick, "Load Quicksave") {
+CREATE_KRZYMOD_INSTANT(gameLoadQuick, "Load Quicksave", 0) {
 	engine->ExecuteCommand("load quick");
 }
 
-CREATE_KRZYMOD_INSTANT(gameLoadAutosave, "Load Autosave") {
+CREATE_KRZYMOD_INSTANT(gameLoadAutosave, "Load Autosave", 0) {
 	engine->ExecuteCommand("load autosave");
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, visualDeepFried, "Deep Fried", 1.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualDeepFried, "Deep Fried", 1.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(mat_ambient_light_r, 10);
 	KRZYMOD_CONTROL_CVAR(mat_ambient_light_g, 10);
 	KRZYMOD_CONTROL_CVAR(mat_ambient_light_b, 10);
 }
 
-CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveFallDamage, "Fall Damage", 3.5f) {
+CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveFallDamage, "Short Fall Boots", 3.5f, 0) {
 
 	if (info.preCall) return;
 
@@ -1029,11 +1048,11 @@ CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveFallDamage, "Fall Damage", 3.5f) {
 	lastGroundedState = grounded;
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, visualClaustrophobia, "Claustrophobia", 2.5f) {
+CREATE_KRZYMOD_SIMPLE(INITIAL, visualClaustrophobia, "Claustrophobia", 2.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(r_aspectratio, 6);
 }
 
-CREATE_KRZYMOD(moveSuperhot, "SUPER HOT", 3.5f) {
+CREATE_KRZYMOD(moveSuperhot, "SUPER HOT", 3.5f, 2) {
 	static Vector prevAngles;
 	static float superHotValue;
 	static Variable host_timescale("host_timescale");
@@ -1060,8 +1079,18 @@ CREATE_KRZYMOD(moveSuperhot, "SUPER HOT", 3.5f) {
 	}
 }
 
-CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveAlwaysDuck, "I'm A Duck!", 2.5f) {
+CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveAlwaysDuck, "I'm A Duck!", 2.5f, 0) {
 	auto moveData = (CMoveData *)info.data;
 	moveData->m_nButtons -= moveData->m_nButtons & IN_JUMP;
 	moveData->m_nButtons |= IN_DUCK;
+}
+
+CREATE_KRZYMOD_INSTANT(gameOpenSesame, "Open Sesame!", 0) {
+	engine->ExecuteCommand("ent_fire *door_open_relay trigger");
+	engine->ExecuteCommand("ent_fire *open_door trigger");
+}
+
+CREATE_KRZYMOD_INSTANT(gameCloseSesame, "Close Sesame!", 0) {
+	engine->ExecuteCommand("ent_fire *door_close_relay trigger");
+	engine->ExecuteCommand("ent_fire *close_door trigger");
 }
