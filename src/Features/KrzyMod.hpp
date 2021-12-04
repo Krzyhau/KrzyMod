@@ -27,7 +27,7 @@ struct KrzyModExecInfo {
 
 class KrzyModEffect {
 public:
-	KrzyModEffect(std::string name, std::string displayName, float executeTime, int groupID, void *function);
+	KrzyModEffect(std::string name, std::string displayName, float executeTime, int groupID, void (*function)(KrzyModExecInfo info));
 
 public:
 	std::string name;
@@ -35,7 +35,7 @@ public:
 	float durationMultiplier;
 	int groupID;
 	//modifiers can have different function types depending on the type, trusting the type variable
-	void *function; 
+	void (*function)(KrzyModExecInfo info);
 };
 
 struct KrzyModActiveEffect {

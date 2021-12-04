@@ -28,11 +28,12 @@ Variable sar_krzymod_debug("sar_krzymod_debug", "0", "Debugs KrzyMod.");
 Variable sar_krzymod_double_numbering("sar_krzymod_double_numbering", "0", "Uses different numbers for every voting in KrzyMod");
 Variable sar_krzymod_vote_channel("sar_krzymod_vote_channel", "krzyhau", "Sets a twitch channel from which votes should be read.", 0);
 
-KrzyModEffect::KrzyModEffect(std::string name, std::string displayName, float durationMultiplier, int groupID, void *function)
+KrzyModEffect::KrzyModEffect(std::string name, std::string displayName, float durationMultiplier, int groupID, void (*function)(KrzyModExecInfo info))
 	: name(name)
 	, displayName(displayName)
 	, durationMultiplier(durationMultiplier)
-	, function(function) {
+	, function(function)
+	, groupID(groupID) {
 	krzyMod.AddEffect(this);
 }
 
