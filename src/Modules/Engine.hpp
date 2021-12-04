@@ -42,7 +42,6 @@ public:
 	using _HostFrameTime = float (*)(void *thisptr);
 	using _ClientTime = float (*)(void *thisptr);
 	using _IsPaused = bool (*)(void *thisptr);
-	using _TraceRay = void(__rescall *)(void *thisptr, const Ray_t &ray, unsigned int fMask, ITraceFilter *pTraceFilter, CGameTrace *pTrace);
 	using _GetCount = int(__rescall *)(void *thisptr);
 	using _Con_IsVisible = bool(__rescall *)(void *thisptr);
 	using _GetLevelNameShort = const char *(__rescall *)(void *thisptr);
@@ -88,7 +87,6 @@ public:
 	_AddScreenTextOverlay AddScreenTextOverlay = nullptr;
 	_ClearAllOverlays ClearAllOverlays = nullptr;
 	_IsPaused IsPaused = nullptr;
-	_TraceRay TraceRay = nullptr;
 	_GetCount GetCount = nullptr;
 	_Con_IsVisible Con_IsVisible = nullptr;
 	_GetLevelNameShort GetLevelNameShort = nullptr;
@@ -153,6 +151,8 @@ public:
 
 	// CModelLoader
 	DECL_DETOUR(PurgeUnusedModels);
+
+	DECL_DETOUR(TraceRay, const Ray_t &ray, unsigned int fMask, ITraceFilter *pTraceFilter, CGameTrace *pTrace);
 
 	// CSteam3Client::OnGameOverlayActivated
 	DECL_DETOUR_B(OnGameOverlayActivated, GameOverlayActivated_t *pGameOverlayActivated);

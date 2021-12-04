@@ -16,6 +16,7 @@
 #include "Features/Speedrun/SpeedrunTimer.hpp"
 #include "Features/Stitcher.hpp"
 #include "Features/Tas/TasPlayer.hpp"
+#include "Features/KrzyMod.hpp"
 #include "Game.hpp"
 #include "Hook.hpp"
 #include "Interface.hpp"
@@ -57,6 +58,7 @@ REDECL(Engine::Disconnect);
 REDECL(Engine::SetSignonState);
 REDECL(Engine::Frame);
 REDECL(Engine::PurgeUnusedModels);
+REDECL(Engine::TraceRay);
 REDECL(Engine::OnGameOverlayActivated);
 REDECL(Engine::OnGameOverlayActivatedBase);
 REDECL(Engine::ReadCustomData);
@@ -358,6 +360,14 @@ DETOUR(Engine::PurgeUnusedModels) {
 	return result;
 }
 
+DETOUR(Engine::TraceRay, const Ray_t &ray, unsigned int fMask, ITraceFilter *pTraceFilter, CGameTrace *pTrace) {
+	auto result = Engine::TraceRay(thisptr, ray, fMask, pTraceFilter, pTrace);
+
+	krzyMod.InvokeTraceRayEvents(pTrace);
+
+	return result;
+}
+
 DETOUR(Engine::ReadCustomData, int *callbackIndex, char **data) {
 	auto size = Engine::ReadCustomData(thisptr, callbackIndex, data);
 	if (callbackIndex && data && *callbackIndex == 0 && size > 8) {
@@ -612,7 +622,7 @@ bool Engine::Init() {
 		}
 
 		if (this->engineTrace = Interface::Create(this->Name(), "EngineTraceServer004")) {
-			this->TraceRay = this->engineTrace->Original<_TraceRay>(Offsets::TraceRay);
+			this->engineTrace->Hook(TraceRay_Hook, TraceRay, Offsets::TraceRay);
 		}
 	}
 

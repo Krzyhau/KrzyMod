@@ -4,6 +4,7 @@
 #include "Modules/Engine.hpp"
 #include "Modules/Scheme.hpp"
 #include "Modules/Server.hpp"
+#include "Modules/Client.hpp"
 #include "Modules/Surface.hpp"
 #include "Modules/VScript.hpp"
 #include "Event.hpp"
@@ -372,6 +373,13 @@ void KrzyMod::InvokeOverrideCameraEvents(CViewSetup *view) {
 	}
 }
 
+void KrzyMod::InvokeTraceRayEvents(CGameTrace *tr) {
+	if (!IsEnabled()) return;
+	for (KrzyModActiveEffect &eff : activeEffects) {
+		eff.Execute(TRACERAY, true, tr);
+	}
+}
+
 
 // Paints not only KrzyMod hud but also all of the active effects
 void KrzyMod::Paint(int slot) {
@@ -499,7 +507,7 @@ void KrzyMod::Paint(int slot) {
 DECL_COMMAND_COMPLETION(sar_krzymod_activate) {
 	std::set<std::string> nameList;
 	for (KrzyModEffect *effect : krzyMod.effects) {
-		if (items.size() == COMMAND_COMPLETION_MAXITEMS) {
+		if (nameList.size() == COMMAND_COMPLETION_MAXITEMS) {
 			break;
 		}
 		if (std::strstr(effect->name.c_str(), match)) {
@@ -531,7 +539,7 @@ CON_COMMAND_F_COMPLETION(sar_krzymod_activate,
 DECL_COMMAND_COMPLETION(sar_krzymod_deactivate) {
 	std::set<std::string> nameList;
 	for (KrzyModActiveEffect &eff : krzyMod.activeEffects) {
-		if (items.size() == COMMAND_COMPLETION_MAXITEMS) {
+		if (nameList.size() == COMMAND_COMPLETION_MAXITEMS) {
 			break;
 		}
 		if (std::strstr(eff.effect->name.c_str(), match)) {
@@ -594,7 +602,7 @@ CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveWStuck, "Help My W Is Stuck", 2.5f, 
 	moveData->m_flForwardMove += 175.0f;
 }
 
-CREATE_KRZYMOD_SIMPLE(OVERRIDE_CAMERA, viewQuakeFov, "Quake FOV", 3.5f, 0) {
+CREATE_KRZYMOD_SIMPLE(OVERRIDE_CAMERA, viewQuakeFov, "Quake FOV", 3.5f, 5) {
 	auto viewSetup = (CViewSetup *)info.data;
 	viewSetup->fov *= 1.6;
 	viewSetup->fovViewmodel *= 1.5;
@@ -759,7 +767,7 @@ CREATE_KRZYMOD(playerLaunchRandom, "Yeet Player", 0.0f, 0) {
 		moveData->m_vecVelocity += Vector(
 			Math::RandomNumber(-1.0f, 1.0f), 
 			Math::RandomNumber(-1.0f, 1.0f), 
-			Math::RandomNumber(-1.0f, 1.0f)
+			Math::RandomNumber(0.0f, 1.0f) //different range here to give more interesting yeets
 		).Normalize() * Math::RandomNumber(500.0f,1500.0f);
 		executed = true;
 	}
@@ -854,7 +862,7 @@ CREATE_KRZYMOD_INSTANT(gameChangePortalgunLinkage, "These aren't my portals!", 0
 	engine->ExecuteCommand("change_portalgun_linkage_id 0 100 1");
 }
 
-CREATE_KRZYMOD(moveDrunk, "Drunk", 3.5f, 0) {
+CREATE_KRZYMOD(moveDrunk, "Drunk", 3.5f, 5) {
 
 	float time = engine->GetClientTime() * 0.3f;
 	float td = fmin((info.endTime-info.time)*0.1,fmin(info.time * 0.2, 1.0));
@@ -891,25 +899,29 @@ CREATE_KRZYMOD_SIMPLE(INITIAL, moveStanleyParable, "The Stanley Parable", 3.5f, 
 }
 
 
-CREATE_KRZYMOD_SIMPLE(ENGINE_TICK, visualRainbowwPropss, "RainbowwPropss", 4.5f, 0) {
-	float time = engine->GetClientTime();
+CREATE_KRZYMOD(visualRainbowwPropss, "RainbowwPropss", 4.5f, 0) {
+	if (info.execType == INITIAL) {
+		KRZYMOD_CONTROL_CVAR(r_colorstaticprops, 1);
+	}
+	if (info.execType == ENGINE_TICK && info.preCall) {
+		float time = engine->GetClientTime();
 
-	for (int i = 0; i < Offsets::NUM_ENT_ENTRIES; ++i) {
-		void *ent = server->m_EntPtrArray[i].m_pEntity;
-		if (!ent) continue;
+		for (int i = 0; i < Offsets::NUM_ENT_ENTRIES; ++i) {
+			void *ent = server->m_EntPtrArray[i].m_pEntity;
+			if (!ent) continue;
 
-		const char* entClass = server->GetEntityClassName(ent);
-		if (!std::strstr(entClass, "prop") && !std::strstr(entClass, "npc")) continue;
+			const char *entClass = server->GetEntityClassName(ent);
+			if (!std::strstr(entClass, "prop") && !std::strstr(entClass, "npc")) continue;
 
-		float colorVal = fmodf((time + i) * 0.3f, 1.0f);
+			float colorVal = fmodf((time + i) * 0.3f, 1.0f);
 
-		Vector color = {
-			fminf(fmaxf(fabs(colorVal * 6.0 - 3.0) - 1.0, 0), 1) * 255,
-			fminf(fmaxf(2.0 - fabs(colorVal * 6.0 - 2.0), 0), 1) * 255,
-			fminf(fmaxf(2.0 - fabs(colorVal * 6.0 - 4.0), 0), 1) * 255
-		};
+			Vector color = {
+				fminf(fmaxf(fabs(colorVal * 6.0 - 3.0) - 1.0, 0), 1) * 255,
+				fminf(fmaxf(2.0 - fabs(colorVal * 6.0 - 2.0), 0), 1) * 255,
+				fminf(fmaxf(2.0 - fabs(colorVal * 6.0 - 4.0), 0), 1) * 255};
 
-		server->SetKeyValueVector(nullptr, ent, "rendercolor", color);
+			server->SetKeyValueVector(nullptr, ent, "rendercolor", color);
+		}
 	}
 }
 
@@ -1093,4 +1105,191 @@ CREATE_KRZYMOD_INSTANT(gameOpenSesame, "Open Sesame!", 0) {
 CREATE_KRZYMOD_INSTANT(gameCloseSesame, "Close Sesame!", 0) {
 	engine->ExecuteCommand("ent_fire *door_close_relay trigger");
 	engine->ExecuteCommand("ent_fire *close_door trigger");
+}
+
+CREATE_KRZYMOD_SIMPLE(TRACERAY, gameOnlyWallsPortalable, "Portals Only On Walls", 2.5f, 4) {
+	auto tr = (CGameTrace *)info.data;
+
+	if (fabsf(tr->plane.normal.z) > 0.2) {
+		tr->surface.flags |= SURF_NOPORTAL;
+	}
+}
+
+CREATE_KRZYMOD_SIMPLE(TRACERAY, gameReversePortalSurfaces, "Reverse Surface Portalability", 2.5f, 4) {
+	auto tr = (CGameTrace *)info.data;
+
+	tr->surface.flags ^= SURF_NOPORTAL;
+}
+
+CREATE_KRZYMOD_SIMPLE(TRACERAY, gameLeastPortals, "Least Portals", 1.5f, 4) {
+	auto tr = (CGameTrace *)info.data;
+
+	tr->surface.flags |= SURF_NOPORTAL;
+}
+
+CREATE_KRZYMOD_SIMPLE(OVERRIDE_CAMERA, viewZoomFov, "Magnifying Glass", 2.5f, 5) {
+	auto viewSetup = (CViewSetup *)info.data;
+	viewSetup->fov /= 1.6;
+	viewSetup->fovViewmodel /= 1.5;
+}
+
+CREATE_KRZYMOD(viewGTA2, "GTA II", 3.5f, 5) {
+	if (info.execType == INITIAL) {
+		KRZYMOD_CONTROL_CVAR(cl_skip_player_render_in_main_view, 0);
+	}
+	if (info.execType == PROCESS_MOVEMENT && info.preCall) {
+		auto moveData = (CMoveData *)info.data;
+		
+		auto wishDir = Vector(moveData->m_flSideMove, moveData->m_flForwardMove);
+		float moveForce = wishDir.Length();
+		float moveAng = RAD2DEG(atan2f(wishDir.y, wishDir.x));
+
+		moveData->m_flForwardMove = moveForce;
+		moveData->m_flSideMove = 0;
+
+		if (moveForce > 0) {
+			QAngle finalAngles;
+			finalAngles.y = moveAng;
+			finalAngles.x = 0;
+			if (moveData->m_nButtons & IN_DUCK) finalAngles.x = 89;
+			if (moveData->m_vecVelocity.z > 20) finalAngles.x = -89;
+
+			engine->SetAngles(GET_SLOT(), finalAngles);
+			moveData->m_vecAngles = finalAngles;
+			moveData->m_vecViewAngles = finalAngles;
+			moveData->m_vecAbsViewAngles = finalAngles;
+		}
+	}
+	if (info.execType == OVERRIDE_CAMERA) {
+		auto viewSetup = (CViewSetup *)info.data;
+		void *player = client->GetPlayer(1);
+		if (!player) return;
+
+		auto pPos = client->GetAbsOrigin(player);
+
+		viewSetup->origin = pPos + Vector(0, 0, 400);
+		viewSetup->angles = {90.0f, 90.0f, 0};
+	}
+}
+
+CREATE_KRZYMOD(gameLaserEyes, "Laser Eyes", 2.5f, 0) {
+
+	if (info.execType == INITIAL) {
+		KRZYMOD_CONTROL_CVAR(sv_player_collide_with_laser, 0);
+	}
+
+	if (info.execType == OVERRIDE_CAMERA) {
+		void *player = client->GetPlayer(1);
+		if (!player) return;
+
+		Vector pos = client->GetAbsOrigin(player) + client->GetViewOffset(player);
+		QAngle angles = engine->GetAngles(0);
+
+		Vector left = {-sinf(DEG2RAD(angles.y)), cosf(DEG2RAD(angles.y)), 0};
+
+		Vector leftEye = pos + left * 8.0;
+		Vector rightEye = pos - left * 8.0;
+
+		char buff[256];
+		snprintf(buff, sizeof(buff), "local pos = [Vector(%.03f,%.03f,%.03f), Vector(%.03f,%.03f,%.03f)];local ang=Vector(%.03f,%.03f,%.03f);", leftEye.x, leftEye.y, leftEye.z, rightEye.x, rightEye.y, rightEye.z, angles.x, angles.y, angles.z);
+		std::string strPos = buff;
+
+		std::string script = R"NUT(
+			local name = "__krzymod_laser_eye_";
+			local relay = null;
+			if(!(relay = Entities.FindByName(null, name+"relay"))){
+				for(local i = 0; i < 2; i++){
+					local e = Entities.CreateByClassname("env_portal_laser");
+					e.__KeyValueFromString("targetname", name+i);
+					EntFireByHandle(e, "TurnOn", "", 0, null, null);
+				}
+				relay = Entities.CreateByClassname("logic_relay");
+				relay.__KeyValueFromString("targetname", name+"relay");
+				EntFireByHandle(relay, "AddOutput", "OnTrigger __krzymod_laser_eye_*,Kill,,0.2,-1", 0, null, null);
+			}
+			for(local i = 0; i < 2; i++){
+				local e = Entities.FindByName(null, name+i);
+				e.SetOrigin(pos[i]);
+				e.SetAngles(ang.x,ang.y,ang.z);
+			}
+			EntFireByHandle(relay, "CancelPending", "", 0, null, null);
+			EntFireByHandle(relay, "Trigger", "", 0, null, null);
+		)NUT";
+
+		script = strPos + script;
+		vscript->RunScript(script.c_str());
+	}
+}
+
+CREATE_KRZYMOD_INSTANT(visualLoudNoise, "Loud Noise", 0) {
+	engine->ExecuteCommand("playvol music/sp_a2_bts2_x1.wav 1");
+}
+
+CREATE_KRZYMOD_INSTANT(gameSpawnGelWater, "Spawn Water Blob", 0) {
+	engine->ExecuteCommand("ent_create_paint_bomb_erase");
+}
+
+CREATE_KRZYMOD_INSTANT(gameSpawnGelJump, "Spawn Repulsion Blob", 0) {
+	engine->ExecuteCommand("ent_create_paint_bomb_jump");
+}
+
+CREATE_KRZYMOD_INSTANT(gameSpawnGelSpeed, "Spawn Propulsion Blob", 0) {
+	engine->ExecuteCommand("ent_create_paint_bomb_speed");
+}
+
+CREATE_KRZYMOD_INSTANT(gameSpawnGelPortal, "Spawn Conversion Blob", 0) {
+	engine->ExecuteCommand("ent_create_paint_bomb_portal");
+}
+
+CREATE_KRZYMOD_INSTANT(gameSpawnTurret, "Spawn Turret", 0) {
+	engine->ExecuteCommand("ent_create npc_portal_turret_floor");
+}
+
+CREATE_KRZYMOD_INSTANT(gameSpawnCompanionCube, "Spawn Companion Cube", 0) {
+	engine->ExecuteCommand("ent_create_portal_companion_cube ");
+}
+
+CREATE_KRZYMOD_INSTANT(gameGivePercent, "Give%%%%", 0) {
+	for (int i=0;i<30;i++) engine->ExecuteCommand("give prop_weighted_cube");
+}
+
+CREATE_KRZYMOD(moveDelayInput, "Delayed Inputs", 1.5f, 5) {
+	const int LAG_COUNT = 30;
+	static int oldButtons[LAG_COUNT];
+	static Vector oldWishDirs[LAG_COUNT];
+	static QAngle oldAngles[LAG_COUNT];
+	QAngle angles = engine->GetAngles(GET_SLOT());
+	if (info.execType == INITIAL) {
+		for (int i = 0; i < LAG_COUNT; i++) {
+			oldWishDirs[i] = {0,0,0};
+			oldAngles[i] = angles;
+			oldButtons[i] = 0;
+		}
+	}
+	if (info.execType == PROCESS_MOVEMENT && info.preCall) {
+		auto moveData = (CMoveData *)info.data;
+
+		for (int i = 0; i < LAG_COUNT-1; i++) {
+			oldWishDirs[i] = oldWishDirs[i + 1];
+			oldButtons[i] = oldButtons[i + 1];
+		}
+		oldWishDirs[LAG_COUNT - 1] = {moveData->m_flSideMove, moveData->m_flForwardMove};
+		oldButtons[LAG_COUNT - 1] = moveData->m_nButtons;
+
+		moveData->m_flSideMove = oldWishDirs[0].x;
+		moveData->m_flForwardMove = oldWishDirs[0].y;
+		moveData->m_nButtons = oldButtons[0];
+
+		moveData->m_vecViewAngles = moveData->m_vecAbsViewAngles = moveData->m_vecAngles = oldAngles[0];
+	}
+	if (info.execType == OVERRIDE_CAMERA) {
+		for (int i = 0; i < LAG_COUNT - 1; i++) {
+			oldAngles[i] = oldAngles[i + 1];
+		}
+		oldAngles[LAG_COUNT - 1] = engine->GetAngles(GET_SLOT());
+
+		auto viewSetup = (CViewSetup *)info.data;
+
+		viewSetup->angles = oldAngles[0];
+	}
 }

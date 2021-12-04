@@ -12,7 +12,8 @@ enum KrzyModExecType {
 	PROCESS_MOVEMENT,
 	OVERRIDE_CAMERA,
 	HUD_PAINT,
-	LAST
+	LAST,
+	TRACERAY
 };
 
 struct KrzyModExecInfo {
@@ -106,6 +107,7 @@ public:
 
 	void InvokeProcessMovementEvents(CMoveData *moveData, bool preCall);
 	void InvokeOverrideCameraEvents(CViewSetup *view);
+	void InvokeTraceRayEvents(CGameTrace *tr);
 	
 };
 

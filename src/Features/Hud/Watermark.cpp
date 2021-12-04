@@ -1,12 +1,11 @@
 #include "Version.hpp"
 
-#if defined(SAR_DEV_BUILD) && !defined(NO_DEV_WATERMARK)
 
-#	include "Hud.hpp"
-#	include "Modules/Engine.hpp"
-#	include "Modules/Surface.hpp"
+#include "Hud.hpp"
+#include "Modules/Engine.hpp"
+#include "Modules/Surface.hpp"
 
-#	define WATERMARK_MSG "Development SAR build. Do not use."
+#define WATERMARK_MSG "KrzyMod v1.0"
 
 class WatermarkHud : public Hud {
 public:
@@ -31,10 +30,8 @@ public:
 		int height = surface->GetFontHeight(font);
 		int width = surface->GetFontLength(font, "%s", WATERMARK_MSG);
 
-		surface->DrawTxt(font, (screenWidth - width) / 2, screenHeight - 150, Color{255, 255, 255, 100}, "%s", WATERMARK_MSG);
+		surface->DrawTxt(font, screenWidth - width - 10, screenHeight - height - 10, Color{255, 255, 255, 100}, "%s", WATERMARK_MSG);
 	}
 };
 
 WatermarkHud watermark;
-
-#endif
