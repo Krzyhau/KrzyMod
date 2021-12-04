@@ -45,6 +45,14 @@ bool TwitchConnection::Connect()
 	active = true;
 	connThread = std::thread([&](){
 		while (IsActive()) {
+			// checking if there is a message to receive
+			fd_set fdset{1, {socketID}};
+			timeval time{0, 10000};
+			int selectResult = select(socketID + 1, &fdset, NULL, NULL, &time);
+			if (selectResult < 0) break;
+			if (selectResult == 0) continue;
+
+			// receiving a message
 			memset(&sockbuff, '\0', sizeof(sockbuff));
 			int length = recv(socketID, sockbuff, sizeof(sockbuff)-1, 0);
 			if (length <= 0) break;
