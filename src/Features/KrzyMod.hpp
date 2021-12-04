@@ -103,7 +103,7 @@ public:
 	void AddConvarController(Variable convar, std::string newValue, float time, KrzyModEffect *parent);
 	KrzyModEffect *GetNextEffect(bool increaseCounter = true);
 	void RandomizeEffectOrder();
-	void Vote(int num);
+	bool Vote(int num);
 
 	void InvokeProcessMovementEvents(CMoveData *moveData, bool preCall);
 	void InvokeOverrideCameraEvents(CViewSetup *view);

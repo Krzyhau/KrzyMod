@@ -234,10 +234,12 @@ void KrzyMod::Update() {
 	// getting new votes from Twitch chat
 	auto twitchMsgs = twitchCon.GetNewMessages();
 	for (auto msg : twitchMsgs) {
+		if (msg.message.length() > 2) continue;
 		if (std::find(votingPeople.begin(), votingPeople.end(), msg.username) == votingPeople.end()) {
-			votingPeople.push_back(msg.username);
 			int voteNum = std::atoi(msg.message.c_str());
-			krzyMod.Vote(voteNum);
+			if (krzyMod.Vote(voteNum)) {
+				votingPeople.push_back(msg.username);
+			}
 		}
 	}
 }
@@ -332,13 +334,14 @@ void KrzyMod::RandomizeEffectOrder() {
 	nextEffectID = 0;
 }
 
-void KrzyMod::Vote(int num) {
+bool KrzyMod::Vote(int num) {
 	for (KrzyModVote &vote : votes) {
 		if (vote.voteNumber == num) {
 			vote.votes++;
-			return;
+			return true;
 		}
 	}
+	return false;
 }
 
 // adds convar controller
