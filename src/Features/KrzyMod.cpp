@@ -114,7 +114,8 @@ void KrzyMod::Update() {
 	}
 
 	// janky chrono time - don't increase duration if it's not enabled or deltaTime is unreasonably huge
-	if (!IsEnabled() || deltaTime > 0.1) {
+	static Variable host_timescale("host_timescale");
+	if (!IsEnabled() || deltaTime > 0.1 / host_timescale.GetFloat()) {
 		auto advanceTimespan = std::chrono::duration_cast<std::chrono::high_resolution_clock::duration>(std::chrono::duration<float>(deltaTime));
 		startTimeModified += advanceTimespan;
 		startTime += advanceTimespan;
@@ -1023,15 +1024,15 @@ CREATE_KRZYMOD(viewBarrelRoll, "Do A Barrel Roll!", 1.5f, 0) {
 	}
 }
 
-CREATE_KRZYMOD_INSTANT(gameRestartLevel, "restart_level", 0) {
+CREATE_KRZYMOD_INSTANT(gameRestartLevel, "restart_level", 2) {
 	engine->ExecuteCommand("restart_level");
 }
 
-CREATE_KRZYMOD_INSTANT(gameLoadQuick, "Load Quicksave", 0) {
+CREATE_KRZYMOD_INSTANT(gameLoadQuick, "Load Quicksave", 2) {
 	engine->ExecuteCommand("load quick");
 }
 
-CREATE_KRZYMOD_INSTANT(gameLoadAutosave, "Load Autosave", 0) {
+CREATE_KRZYMOD_INSTANT(gameLoadAutosave, "Load Autosave", 2) {
 	engine->ExecuteCommand("load autosave");
 }
 
@@ -1089,7 +1090,7 @@ CREATE_KRZYMOD(moveSuperhot, "SUPER HOT", 3.5f, 2) {
 
 		superHotValue = fminf(fmaxf(superHotValue + 0.04 * (shouldIncrease ? 1 : -1), 0.1), 1.0);
 
-		host_timescale.ThisPtr()->m_fValue = superHotValue;
+		host_timescale.SetValue(superHotValue);
 
 		prevAngles = newAngles;
 	}
