@@ -9,6 +9,9 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <cstring>
+#include <unistd.h>
+#define INVALID_SOCKET -1
+#define SOCKET_ERROR -1
 #endif
 
 
