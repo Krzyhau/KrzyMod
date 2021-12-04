@@ -116,16 +116,16 @@ extern KrzyMod krzyMod;
 
 #define KRZYMOD(name) krzymod_##name
 #define CREATE_KRZYMOD(name, displayName, executionTime, groupID)                                                         \
-	void KRZYMOD(name)##_callback(KrzyModExecInfo info);                                                                    \
-	KrzyModEffect *##KRZYMOD(name) = new KrzyModEffect(#name, displayName, executionTime, groupID, KRZYMOD(name)##_callback); \
-	void KRZYMOD(name)##_callback(KrzyModExecInfo info)
+	void KRZYMOD(name) ## _callback(KrzyModExecInfo info);                                                                    \
+	KrzyModEffect *KRZYMOD(name) = new KrzyModEffect(#name, displayName, executionTime, groupID, KRZYMOD(name) ## _callback); \
+	void KRZYMOD(name) ## _callback(KrzyModExecInfo info)
 
 #define CREATE_KRZYMOD_SIMPLE(type, name, displayName, executionTime, groupID)    \
-	void KRZYMOD(name)##_callback2(KrzyModExecInfo info);                           \
+	void KRZYMOD(name) ## _callback2(KrzyModExecInfo info);                           \
 	CREATE_KRZYMOD(name, displayName, executionTime, groupID) {                   \
-		if (info.execType == type) KRZYMOD(name)##_callback2(info);                 \
+		if (info.execType == type) KRZYMOD(name) ## _callback2(info);                 \
 	}                                                                             \
-	void KRZYMOD(name)##_callback2(KrzyModExecInfo info)
+	void KRZYMOD(name) ## _callback2(KrzyModExecInfo info)
 
 #define CREATE_KRZYMOD_INSTANT(name, displayName, groupID) CREATE_KRZYMOD_SIMPLE(INITIAL, name, displayName, 0.0f, groupID)
 
