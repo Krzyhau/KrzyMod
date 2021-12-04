@@ -1104,13 +1104,29 @@ CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveAlwaysDuck, "I'm A Duck!", 2.5f, 0) 
 }
 
 CREATE_KRZYMOD_INSTANT(gameOpenSesame, "Open Sesame!", 0) {
-	engine->ExecuteCommand("ent_fire *door_open_relay trigger");
-	engine->ExecuteCommand("ent_fire *open_door trigger");
+	for (int i = 0; i < Offsets::NUM_ENT_ENTRIES; ++i) {
+		void *ent = server->m_EntPtrArray[i].m_pEntity;
+		if (!ent) continue;
+
+		const char *entName = server->GetEntityName(ent);
+		if (entName == nullptr) continue;
+		if (!std::strstr(entName, "door_open_relay") && !std::strstr(entName, "open_door")) continue;
+		std::string command = "ent_fire " + std::string(entName) + " trigger";
+		engine->ExecuteCommand(command.c_str());
+	}
 }
 
 CREATE_KRZYMOD_INSTANT(gameCloseSesame, "Close Sesame!", 0) {
-	engine->ExecuteCommand("ent_fire *door_close_relay trigger");
-	engine->ExecuteCommand("ent_fire *close_door trigger");
+	for (int i = 0; i < Offsets::NUM_ENT_ENTRIES; ++i) {
+		void *ent = server->m_EntPtrArray[i].m_pEntity;
+		if (!ent) continue;
+
+		const char *entName = server->GetEntityName(ent);
+		if (entName == nullptr) continue;
+		if (!std::strstr(entName, "door_close_relay") && !std::strstr(entName, "close_door")) continue;
+		std::string command = "ent_fire " + std::string(entName) + " trigger";
+		engine->ExecuteCommand(command.c_str());
+	}
 }
 
 CREATE_KRZYMOD_SIMPLE(TRACERAY, gameOnlyWallsPortalable, "Portals Only On Walls", 2.5f, 4) {
