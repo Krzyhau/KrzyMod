@@ -103,7 +103,10 @@ void KrzyMod::Update() {
 		if (twitchCon.GetChannel().compare(sar_krzymod_vote_channel.GetString()) != 0) {
 			twitchCon.SetChannel(sar_krzymod_vote_channel.GetString());
 		}
-		if (!twitchCon.IsActive()) twitchCon.Connect();
+		if (!twitchCon.IsActive()) {
+			twitchCon.SetChannel(sar_krzymod_vote_channel.GetString());
+			twitchCon.Connect();
+		}
 
 		// we always want sv_cheats to be enabled when krzymod is enabled. no questions.
 		if (!sv_cheats.GetBool()) sv_cheats.SetValue(true);
