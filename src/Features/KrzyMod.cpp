@@ -32,8 +32,8 @@ KrzyModEffect::KrzyModEffect(std::string name, std::string displayName, float du
 	: name(name)
 	, displayName(displayName)
 	, durationMultiplier(durationMultiplier)
-	, function(function)
-	, groupID(groupID) {
+	, groupID(groupID)
+	, function(function) {
 	krzyMod.AddEffect(this);
 }
 
@@ -772,11 +772,12 @@ CREATE_KRZYMOD(playerLaunchRandom, "Yeet Player", 0.0f, 0) {
 	if (info.execType == INITIAL) executed = false;
 	if (info.execType == PROCESS_MOVEMENT && !info.preCall && !executed) {
 		auto moveData = (CMoveData *)info.data;
-		moveData->m_vecVelocity += Vector(
+		Vector newVec = moveData->m_vecVelocity + Vector(
 			Math::RandomNumber(-1.0f, 1.0f), 
 			Math::RandomNumber(-1.0f, 1.0f), 
 			Math::RandomNumber(0.0f, 1.0f) //different range here to give more interesting yeets
 		).Normalize() * Math::RandomNumber(500.0f,1500.0f);
+		moveData->m_vecVelocity = newVec;
 		executed = true;
 	}
 }
@@ -786,7 +787,8 @@ CREATE_KRZYMOD(playerLaunchUp, "Polish Space Program", 0.0f, 0) {
 	if (info.execType == INITIAL) executed = false;
 	if (info.execType == PROCESS_MOVEMENT && !info.preCall && !executed) {
 		auto moveData = (CMoveData *)info.data;
-		moveData->m_vecVelocity += Vector(0,0,3600.0f);
+		Vector newVec = moveData->m_vecVelocity + Vector(0, 0, 3600.0f);
+		moveData->m_vecVelocity = newVec;
 		executed = true;
 	}
 }
