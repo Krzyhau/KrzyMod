@@ -24,9 +24,10 @@ Variable sar_krzymod_time_base("sar_krzymod_time_base", "30", 5.0f, 3600.0f, "Th
 Variable sar_krzymod_timer_multiplier("sar_krzymod_timer_multiplier", "1", 0, "Multiplier for the main KrzyMod timer.\n");
 Variable sar_krzymod_primary_font("sar_krzymod_primary_font", "92", 0, "Change font of KrzyMod.\n");
 Variable sar_krzymod_secondary_font("sar_krzymod_secondary_font", "97", 0, "Change font of KrzyMod.\n");
-Variable sar_krzymod_debug("sar_krzymod_debug", "0", "Debugs KrzyMod.");
-Variable sar_krzymod_double_numbering("sar_krzymod_double_numbering", "0", "Uses different numbers for every voting in KrzyMod");
-Variable sar_krzymod_vote_channel("sar_krzymod_vote_channel", "krzyhau", "Sets a twitch channel from which votes should be read.", 0);
+Variable sar_krzymod_debug("sar_krzymod_debug", "0", "Debugs KrzyMod.\n");
+Variable sar_krzymod_double_numbering("sar_krzymod_double_numbering", "0", "Uses different numbers for every voting in KrzyMod\n");
+Variable sar_krzymod_vote_channel("sar_krzymod_vote_channel", "krzyhau", "Sets a twitch channel from which votes should be read.\n", 0);
+Variable sar_krzymod_vote_proportional("sar_krzymod_vote_proportional", "1", 0, 1, "Should KrzyMod use proportional voting? (x% means effect has x% to be activated).\n", 0);
 
 KrzyModEffect::KrzyModEffect(std::string name, std::string displayName, float durationMultiplier, int groupID, void (*function)(KrzyModExecInfo info))
 	: name(name)
@@ -223,15 +224,33 @@ void KrzyMod::Update() {
 
 	// evaluating the voting
 	if (!evaluatedVoting && sar_krzymod_time_base.GetFloat() - GetTime(true) < 1.0) {
-		//get most voted modifier
+		
 		KrzyModVote *vote = &votes[0];
-		for (int i = 1; i < 4; i++) {
-			if (votes[i].votes > vote->votes) {
-				vote = &votes[i];
-			} else if (votes[i].votes == vote->votes && Math::RandomNumber(0.0f, 1.0f) > 0.5) {
-				vote = &votes[i];
+		if (sar_krzymod_vote_proportional.GetBool()) {
+			// proportional. evaluate chances for each effect and randomly assign one
+			int totalVoteCount = 0;
+			for (int i = 0; i < 4; i++) totalVoteCount += votes[i].votes;
+
+			float random = Math::RandomNumber(0.0f, 1.0f);
+			float totalPerc = 0;
+			for (int i = 0; i < 4; i++) {
+				totalPerc += (totalVoteCount == 0) ? 0.25 : ((votes[i].votes) / (float)(totalVoteCount));
+				if (totalPerc > random) {
+					vote = &votes[i];
+					break;
+				}
+			}
+		} else {
+			//not proportional, get most voted effect
+			for (int i = 1; i < 4; i++) {
+				if (votes[i].votes > vote->votes) {
+					vote = &votes[i];
+				} else if (votes[i].votes == vote->votes && Math::RandomNumber(0.0f, 1.0f) > 0.5) {
+					vote = &votes[i];
+				}
 			}
 		}
+		
 		evaluatedVoting = true;
 		selectedEffect = vote->effect;
 	}
@@ -425,13 +444,11 @@ void KrzyMod::Paint(int slot) {
 	if (drawVotes->effect != nullptr) {
 		// calculating voting info
 		int totalVoteCount = 0;
+		for (int i = 0; i < 4; i++) totalVoteCount += drawVotes[i].votes;
+
 		float votePercentages[4];
-		
-		for (int i = 0; i < 4; i++) {
-			totalVoteCount += drawVotes[i].votes;
-		}
 		for (int i = 0; i < 4;i++) {
-			votePercentages[i] = (drawVotes[i].votes+1) / (float)(totalVoteCount+4);
+			votePercentages[i] = (totalVoteCount == 0) ? 0 : ((drawVotes[i].votes) / (float)(totalVoteCount));
 		}
 
 
