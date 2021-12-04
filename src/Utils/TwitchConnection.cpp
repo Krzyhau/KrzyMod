@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <cstring>
 #endif
 
 
@@ -28,7 +29,7 @@ bool TwitchConnection::Connect()
 	hints.ai_family = AF_INET;
 	if ((getaddrinfo("irc.chat.twitch.tv", NULL, &hints, &res)) != 0) return false;
 	sockaddr_in addr;
-	addr.sin_addr.S_un = ((sockaddr_in*)res->ai_addr)->sin_addr.S_un;
+	addr.sin_addr = ((sockaddr_in*)res->ai_addr)->sin_addr;
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(6667);
 	freeaddrinfo(res);
@@ -79,7 +80,11 @@ bool TwitchConnection::IsActive()
 
 void TwitchConnection::Disconnect()
 {
+#ifdef WIN32
 	closesocket(socketID);
+#else
+	close(socketID);
+#endif
 	active = false;
 	connThread.join();
 #ifdef WIN32
