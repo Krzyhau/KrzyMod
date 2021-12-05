@@ -732,7 +732,7 @@ CREATE_KRZYMOD_SIMPLE(HUD_PAINT, visualDvdLogo, "DVD Logo", 4.5f, 0) {
 				bool disk = diskCircle1 && !diskCircle2;
 				pos.x -= (1.0 - pos.y) * 0.1 - 0.02; //ofsetting for tilted look
 				// V and parts of D's
-				bool v = ((abs((pos.y - fmax(0, 0.5 - abs(pow(pos.x, 0.45) - 0.695) * 4.6)))) < 0.155) && pos.y > 0.056 && pos.x < 0.7 && pos.x > 0;
+				bool v = ((fabsf((pos.y - fmaxf(0, 0.5 - fabsf(powf(pos.x, 0.45) - 0.695) * 4.6)))) < 0.155) && pos.y > 0.056 && pos.x < 0.7 && pos.x > 0;
 				// using """modulo""" to repeat D's
 				bool xNot0 = pos.x > 0;
 				Vector pos2 = pos;
