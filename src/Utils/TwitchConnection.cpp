@@ -91,15 +91,14 @@ bool TwitchConnection::IsActive()
 
 void TwitchConnection::Disconnect()
 {
-#ifdef WIN32
-	closesocket(socketID);
-#else
-	close(socketID);
-#endif
+	shutdown(socketID, 2);  // SHUT_RDWR on Linux, SD_BOTH on Windows
 	active = false;
 	connThread.join();
 #ifdef WIN32
+	closesocket(socketID);
 	WSACleanup();
+#else
+	close(socketID);
 #endif
 }
 

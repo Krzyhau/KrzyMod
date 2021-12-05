@@ -732,14 +732,15 @@ CREATE_KRZYMOD_SIMPLE(HUD_PAINT, visualDvdLogo, "DVD Logo", 4.5f, 0) {
 				bool disk = diskCircle1 && !diskCircle2;
 				pos.x -= (1.0 - pos.y) * 0.1 - 0.02; //ofsetting for tilted look
 				// V and parts of D's
-				bool v = abs((pos.y - fmax(0, 0.5 - abs(pow(pos.x, 0.45) - 0.695) * 4.6))) < 0.155 && pos.y > 0.056 && pos.x < 0.7 && pos.x > 0;
+				bool v = ((abs((pos.y - fmax(0, 0.5 - abs(pow(pos.x, 0.45) - 0.695) * 4.6)))) < 0.155) && pos.y > 0.056 && pos.x < 0.7 && pos.x > 0;
 				// using """modulo""" to repeat D's
 				bool xNot0 = pos.x > 0;
-				if (pos.x >= 0.615f) pos.x -= 0.615f;
+				Vector pos2 = pos;
+				if (pos2.x >= 0.615f) pos2.x -= 0.615f;
 				// D's
-				bool d1 = ((pos - Vector(0.09, 0.3)) * Vector(0.89, 0.82)).Length() < 0.2;
-				bool d2 = ((pos - Vector(0.09, 0.3)) * Vector(0.89, 0.82)).Length() < 0.12;
-				bool d = xNot0 && ((d1 && !d2 && pos.x > 0.07) || (pos.x < 0.09 && pos.y > 0.2 && pos.y < 0.544));
+				bool d1 = ((pos2 - Vector(0.09, 0.3)) * Vector(0.89, 0.82)).Length() < 0.2;
+				bool d2 = ((pos2 - Vector(0.09, 0.3)) * Vector(0.89, 0.82)).Length() < 0.12;
+				bool d = xNot0 && ((d1 && !d2 && pos2.x > 0.07) || (pos2.x < 0.09 && pos2.y > 0.2 && pos2.y < 0.544));
 				
 				int pixelColor = (disk || v || d) ? 255 : 0;
 
