@@ -694,6 +694,7 @@ CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveStickyGround, "Sticky Ground", 3.5f,
 
 CREATE_KRZYMOD(moveInverseControl, "Inverse Controls", 3.5f, 0) {
 	if (info.execType == INITIAL) {
+		//reverse angles
 		Variable yaw = Variable("m_yaw");
 		krzyMod.AddConvarController(yaw, std::to_string(yaw.GetFloat() * -1), info.endTime, (KrzyModEffect *)info.data);
 		Variable pitch = Variable("m_pitch");
@@ -702,8 +703,16 @@ CREATE_KRZYMOD(moveInverseControl, "Inverse Controls", 3.5f, 0) {
 	if (info.execType == PROCESS_MOVEMENT) {
 		auto moveData = (CMoveData *)info.data;
 
+		//reverse movement
 		moveData->m_flForwardMove *= -1;
 		moveData->m_flSideMove *= -1;
+
+		//reverse portals
+		bool bluePortal = (moveData->m_nButtons & IN_ATTACK) > 0;
+		bool orangePortal = (moveData->m_nButtons & IN_ATTACK2) > 0;
+		moveData->m_nButtons &= ~(IN_ATTACK | IN_ATTACK2);
+		if (bluePortal) moveData->m_nButtons &= IN_ATTACK2;
+		if (orangePortal) moveData->m_nButtons &= IN_ATTACK;
 	}
 }
 
@@ -1265,7 +1274,8 @@ CREATE_KRZYMOD(gameLaserEyes, "Laser Eyes", 2.5f, 0) {
 	}
 }
 
-CREATE_KRZYMOD_INSTANT(visualLoudNoise, "Loud Noise", 0) {
+CREATE_KRZYMOD_INSTANT(visualLoudNoise, "Loud Music (!!!)", 0) {
+	engine->ExecuteCommand("snd_musicvolume 1");
 	engine->ExecuteCommand("playvol music/sp_a2_bts2_x1.wav 1");
 }
 
@@ -1290,7 +1300,7 @@ CREATE_KRZYMOD_INSTANT(gameSpawnTurret, "Spawn Turret", 0) {
 }
 
 CREATE_KRZYMOD_INSTANT(gameSpawnCompanionCube, "Spawn Companion Cube", 0) {
-	engine->ExecuteCommand("ent_create_portal_companion_cube ");
+	engine->ExecuteCommand("ent_create_portal_companion_cube");
 }
 
 CREATE_KRZYMOD_INSTANT(gameGivePercent, "Give%%%%", 0) {
@@ -1335,5 +1345,109 @@ CREATE_KRZYMOD(moveDelayInput, "Delayed Inputs", 1.5f, 5) {
 		auto viewSetup = (CViewSetup *)info.data;
 
 		viewSetup->angles = oldAngles[0];
+	}
+}
+
+CREATE_KRZYMOD(gameSpaceCoreOrbit, "Space Core Orbit", 1.6f, 0) {
+	static bool precachedLastFrame = false;
+	static int lastSound = 0;
+	if (info.execType == ENGINE_TICK && info.preCall) {
+		void *player = server->GetPlayer(1);
+		if (!player) return;
+
+		// the pain i have to get through to make these models function properly
+
+		if (!precachedLastFrame) {
+			bool spaceCoreExists = false;
+
+			for (int i = 0; i < Offsets::NUM_ENT_ENTRIES; ++i) {
+				void *ent = server->m_EntPtrArray[i].m_pEntity;
+				if (!ent) continue;
+
+				const char *entName = server->GetEntityName(ent);
+				if (entName == nullptr) continue;
+				if (std::strstr(entName, "__krzymod_space_core")) {
+					spaceCoreExists = true;
+					break;
+				}
+			}
+
+			if (!spaceCoreExists) {
+				engine->ExecuteCommand("prop_dynamic_create npcs/personality_sphere/personality_sphere_skins");
+				engine->ExecuteCommand("ent_fire dynamic_prop kill");
+				precachedLastFrame = true;
+			}
+		}
+		else {
+			precachedLastFrame = false;
+		}
+
+		if (!precachedLastFrame) {
+			vscript->RunScript(R"NUT(
+				local name = "__krzymod_space_core_";
+				local relay = null;
+				if(!(relay = Entities.FindByName(null, name+"relay"))){
+					for(local i = 0; i < 20; i++){
+						local e = Entities.CreateByClassname("prop_dynamic");
+						e.SetModel("models/npcs/personality_sphere/personality_sphere_skins.mdl");
+						e.__KeyValueFromString("targetname", name+i);
+						e.__KeyValueFromString("DefaultAnim", "sphere_tuberide_long_twirl");
+						e.__KeyValueFromString("skin", "2");
+						EntFireByHandle(e, "TurnOn", "", 0, null, null);
+						EntFireByHandle(e, "SetAnimation", "sphere_tuberide_long_twirl", i*0.5, null, null);
+					}
+					relay = Entities.CreateByClassname("logic_relay");
+					relay.__KeyValueFromString("targetname", name+"relay");
+					EntFireByHandle(relay, "AddOutput", "OnTrigger __krzymod_space_core_*,Kill,,0.2,-1", 0, null, null);
+				}
+				for(local i = 0; i < 20; i++){
+					local e = Entities.FindByName(null, name+i);
+					local ppos = GetPlayer().GetOrigin();
+					local xang = i*14.35 + Time();
+					local yang = i*16.0 + Time();
+					if(i%2==0)xang *= -1.0;
+					e.SetOrigin(ppos + Vector(cos(xang)*69,sin(xang)*69,64+64*sin(yang)));
+				}
+				EntFireByHandle(relay, "CancelPending", "", 0, null, null);
+				EntFireByHandle(relay, "Trigger", "", 0, null, null);
+			)NUT");
+		}
+
+
+		// playing random space core sound every 0.25 second
+		if (lastSound <= 0) {
+			std::string sound = "playvol vo/core01/";
+			if (Math::RandomNumber(0.0f, 1.0f) > 0.5f) {
+				sound += Utils::ssprintf("space%02d.wav 0.5", Math::RandomNumber(1, 24));
+			} else {
+				sound += Utils::ssprintf("babbleb%02d.wav 0.5", Math::RandomNumber(1, 35));
+			}
+			engine->ExecuteCommand(sound.c_str());
+			lastSound += 15;
+		} else {
+			lastSound--;
+		}
+	}
+}
+
+CREATE_KRZYMOD_INSTANT(gameIgniteAll, "Ignite Everything", 0) {
+	engine->ExecuteCommand("ent_fire * ignite");
+}
+
+CREATE_KRZYMOD_SIMPLE(ENGINE_TICK, gameButterfingers, "Butterfingers!", 2.5f, 0) {
+	static bool pressedUseLastTick = false;
+	if (pressedUseLastTick) {
+		engine->ExecuteCommand("-use");
+	}
+
+	void *player = server->GetPlayer(1);
+	if (!player) return;
+
+	auto m_hUseEntity = *reinterpret_cast<int *>((uintptr_t)player + Offsets::m_hUseEntity);
+	bool isHoldingSth = m_hUseEntity != 0xFFFFFFFF;
+
+	if (isHoldingSth && Math::RandomNumber(0.0f,1.0f) > 0.95f) {
+		engine->ExecuteCommand("+use");
+		pressedUseLastTick = true;
 	}
 }
