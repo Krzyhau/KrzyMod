@@ -8,7 +8,7 @@
 #ifdef _WIN32
 #	define MODULE_EXTENSION ".dll"
 // clang-format off
-#define GAME_PATH(x) _GAME_PATH(Games/Windows/##x.hpp)
+#define GAME_PATH(x) _GAME_PATH(Offsets/Windows/##x.hpp)
 // clang-format on
 #	define __rescall __thiscall
 #	define DLL_EXPORT extern "C" __declspec(dllexport)

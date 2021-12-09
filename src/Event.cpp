@@ -2,15 +2,15 @@
 
 #include <map>
 
-std::vector<SarInitHandler *> SarInitHandler::handlers;
+std::vector<PluginInitHandler *> PluginInitHandler::handlers;
 
-SarInitHandler::SarInitHandler(std::function<void()> cb)
+PluginInitHandler::PluginInitHandler(std::function<void()> cb)
 	: cb(cb) {
 	handlers.push_back(this);
 }
 
-void SarInitHandler::RunAll() {
-	for (auto h : SarInitHandler::handlers) {
+void PluginInitHandler::RunAll() {
+	for (auto h : PluginInitHandler::handlers) {
 		h->cb();
 	}
 }

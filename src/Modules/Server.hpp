@@ -1,7 +1,7 @@
 #pragma once
 #include "Interface.hpp"
 #include "Module.hpp"
-#include "Offsets.hpp"
+#include "Offsets/Offsets.hpp"
 #include "Utils.hpp"
 #include "Utils/SDK.hpp"
 #include "Variable.hpp"
@@ -54,8 +54,6 @@ public:
 private:
 	bool jumpedLastTime = false;
 	float savedVerticalVelocity = 0.0f;
-	bool callFromCheckJumpButton = false;
-
 public:
 	DECL_M(GetPortals, int);
 	DECL_M(GetAbsOrigin, Vector);
@@ -80,30 +78,8 @@ public:
 	// CGameMovement::ProcessMovement
 	DECL_DETOUR(ProcessMovement, void *pPlayer, CMoveData *pMove);
 
-	DECL_DETOUR(StartTouchChallengeNode, void *entity);
-
 	// CGameMovement::CheckJumpButton
 	DECL_DETOUR_T(bool, CheckJumpButton);
-
-	static _CheckJumpButton CheckJumpButtonBase;
-
-	// CGameMovement::PlayerMove
-	DECL_DETOUR(PlayerMove);
-
-	// CGameMovement::FinishGravity
-	DECL_DETOUR(FinishGravity);
-
-	// CGameMovement::AirMove
-	DECL_DETOUR_B(AirMove);
-
-#ifdef _WIN32
-	// CGameMovement::AirMove
-	static uintptr_t AirMove_Skip;
-	static uintptr_t AirMove_Continue;
-	DECL_DETOUR_MID_MH(AirMove_Mid);
-#else
-	float *aircontrol_fling_speed_addr;
-#endif
 
 	// CServerGameDLL::GameFrame
 	DECL_DETOUR(GameFrame, bool simulating);
@@ -127,3 +103,6 @@ extern Variable sv_maxspeed;
 extern Variable sv_stopspeed;
 extern Variable sv_maxvelocity;
 extern Variable sv_gravity;
+
+extern Variable sv_krzymod_jump_height;
+extern Variable sv_krzymod_autojump;

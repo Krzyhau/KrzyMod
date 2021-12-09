@@ -1,7 +1,5 @@
 #pragma once
 #include "Command.hpp"
-#include "EngineDemoPlayer.hpp"
-#include "EngineDemoRecorder.hpp"
 #include "Interface.hpp"
 #include "Module.hpp"
 #include "Utils.hpp"
@@ -91,9 +89,6 @@ public:
 	_Con_IsVisible Con_IsVisible = nullptr;
 	_GetLevelNameShort GetLevelNameShort = nullptr;
 
-	EngineDemoPlayer *demoplayer = nullptr;
-	EngineDemoRecorder *demorecorder = nullptr;
-
 	int *tickcount = nullptr;
 	double *net_time = nullptr;
 	float *interval_per_tick = nullptr;
@@ -114,7 +109,6 @@ public:
 	bool startedTransitionFadeout = false;
 	bool forcedPrimaryFullscreen = false;
 	bool shouldPauseForSync = false;
-
 public:
 	void ExecuteCommand(const char *cmd, bool immediately = false);
 	int GetTick();
@@ -132,55 +126,18 @@ public:
 	bool IsGamePaused();
 	int GetMapIndex(const std::string map);
 	std::string GetCurrentMapName();
-	bool IsCoop();
-	bool IsOrange();
-	void RecordDemoData(void *data, size_t len);
 	bool Trace(Vector &pos, QAngle &angle, float distMax, CTraceFilterSimple &filter, CGameTrace &tr);
 	bool TraceFromCamera(float distMax, CGameTrace &tr);
 	bool ConsoleVisible();
 	void GetTicks(int &host, int &server, int &client);
 
-	// CClientState::Disconnect
-	DECL_DETOUR(Disconnect, bool bShowMainMenu);
-
-	// CClientState::SetSignonState
-	DECL_DETOUR(SetSignonState, int state, int count, void *unk);
-
 	// CEngine::Frame
 	DECL_DETOUR(Frame);
-
-	// CModelLoader
-	DECL_DETOUR(PurgeUnusedModels);
 
 	DECL_DETOUR(TraceRay, const Ray_t &ray, unsigned int fMask, ITraceFilter *pTraceFilter, CGameTrace *pTrace);
 
 	// CSteam3Client::OnGameOverlayActivated
 	DECL_DETOUR_B(OnGameOverlayActivated, GameOverlayActivated_t *pGameOverlayActivated);
-
-	DECL_DETOUR_COMMAND(plugin_load);
-	DECL_DETOUR_COMMAND(plugin_unload);
-	DECL_DETOUR_COMMAND(exit);
-	DECL_DETOUR_COMMAND(quit);
-	DECL_DETOUR_COMMAND(help);
-	DECL_DETOUR_COMMAND(gameui_activate);
-	DECL_DETOUR_COMMAND(playvideo_end_level_transition);
-	DECL_DETOUR_COMMAND(stop_transition_videos_fadeout);
-	DECL_DETOUR_COMMAND(unpause);
-	DECL_DETOUR_COMMAND(load);
-	DECL_DETOUR_COMMAND(give);
-
-	DECL_DETOUR(ReadCustomData, int *callbackIndex, char **data);
-	DECL_DETOUR_T(const char *, ReadConsoleCommand);
-
-#ifdef _WIN32
-	// CDemoSmootherPanel::ParseSmoothingInfo
-	static uintptr_t ParseSmoothingInfo_Skip;
-	static uintptr_t ParseSmoothingInfo_Default;
-	static uintptr_t ParseSmoothingInfo_Continue;
-	DECL_DETOUR_MID_MH(ParseSmoothingInfo_Mid);
-
-	Memory::Patch *demoSmootherPatch = nullptr;
-#endif
 
 	bool Init() override;
 	void Shutdown() override;
@@ -192,21 +149,6 @@ private:
 };
 
 extern Engine *engine;
-
-extern Variable host_framerate;
-extern Variable net_showmsg;
-extern Variable sv_portal_players;
-extern Variable fps_max;
-extern Variable mat_norendering;
-
-extern Variable sar_record_at;
-extern Variable sar_record_at_demo_name;
-extern Variable sar_record_at_increment;
-
-extern Variable sar_pause_at;
-extern Variable sar_pause_for;
-
-extern Variable sar_tick_debug;
 
 #define TIME_TO_TICKS(dt) ((int)(0.5f + (float)(dt) / *engine->interval_per_tick))
 #define GET_SLOT() engine->GetLocalPlayerIndex() - 1

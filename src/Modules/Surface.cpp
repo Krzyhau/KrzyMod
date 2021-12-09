@@ -4,20 +4,11 @@
 #include "Console.hpp"
 #include "Interface.hpp"
 #include "Module.hpp"
-#include "Offsets.hpp"
+#include "Offsets/Offsets.hpp"
 #include "Utils.hpp"
 
 #include <stdarg.h>
 
-CON_COMMAND(sar_font_get_name, "sar_font_get_name <id> - gets the name of a font from its index\n") {
-	if (args.ArgC() != 2) {
-		return console->Print(sar_font_get_name.ThisPtr()->m_pszHelpString);
-	}
-
-	int id = atoi(args[1]);
-	const char *name = surface->GetFontName(surface->matsurface->ThisPtr(), id);
-	console->Print("%s\n", name);
-}
 
 int Surface::GetFontHeight(HFont font) {
 	return this->GetFontTall(this->matsurface->ThisPtr(), font);

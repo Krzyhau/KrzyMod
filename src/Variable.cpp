@@ -2,8 +2,8 @@
 
 #include "Game.hpp"
 #include "Modules/Tier1.hpp"
-#include "Offsets.hpp"
-#include "SAR.hpp"
+#include "Offsets/Offsets.hpp"
+#include "PluginMain.hpp"
 
 #include <cstring>
 
@@ -184,7 +184,7 @@ void Variable::ClearAllCallbacks() {
 int Variable::RegisterAll() {
 	auto result = 0;
 	for (const auto &var : Variable::GetList()) {
-		if (var->version != SourceGame_Unknown && !sar.game->Is(var->version)) {
+		if (var->version != SourceGame_Unknown && !pluginMain.game->Is(var->version)) {
 			continue;
 		}
 		var->Register();

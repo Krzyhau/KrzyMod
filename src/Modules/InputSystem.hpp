@@ -2,7 +2,7 @@
 #include "Command.hpp"
 #include "Interface.hpp"
 #include "Module.hpp"
-#include "Offsets.hpp"
+#include "Offsets/Offsets.hpp"
 #include "Utils.hpp"
 
 enum {
@@ -234,9 +234,6 @@ public:
 	bool IsKeyDown(ButtonCode_t);
 	void GetCursorPos(int &x, int &y);
 	void SetCursorPos(int x, int y);
-
-	// CInputSystem::SleepUntilInput
-	DECL_DETOUR(SleepUntilInput, int nMaxSleepTimeMS);
 
 	bool Init() override;
 	void Shutdown() override;

@@ -17,15 +17,10 @@ class Client : public Module {
 private:
 	Interface *g_ClientDLL = nullptr;
 	Interface *g_pClientMode = nullptr;
-	Interface *g_pClientMode2 = nullptr;
-	Interface *g_HUDChallengeStats = nullptr;
 	Interface *g_HUDQuickInfo = nullptr;
 	Interface *s_EntityList = nullptr;
 	Interface *g_Input = nullptr;
 	Interface *g_HudChat = nullptr;
-	Interface *g_HudMultiplayerBasicInfo = nullptr;
-	Interface *g_HudSaveStatus = nullptr;
-	Interface *g_GameMovement = nullptr;
 
 public:
 	using _GetClientEntity = void *(__rescall *)(void *thisptr, int entnum);
@@ -65,44 +60,17 @@ public:
 	int GetSplitScreenPlayerSlot(void *entity);
 
 public:
-	// CGameMovement::ProcessMovement
-	DECL_DETOUR(ProcessMovement, void *player, CMoveData *move);
 
 	// CHLClient::LevelInitPreEntity
 	DECL_DETOUR(LevelInitPreEntity, const char *levelName);
-
-	// ClientModeShared::CreateMove
-	DECL_DETOUR(CreateMove, float flInputSampleTime, CUserCmd *cmd);
-	DECL_DETOUR(CreateMove2, float flInputSampleTime, CUserCmd *cmd);
-
-	// CHud::GetName
-	DECL_DETOUR_T(const char *, GetName);
-
-	// CHudMultiplayerBasicInfo::ShouldDraw
-	DECL_DETOUR_T(bool, ShouldDraw_BasicInfo);
-
-	// CHudSaveStatus::ShouldDraw
-	DECL_DETOUR_T(bool, ShouldDraw_SaveStatus);
-
-	// CHudChat::MsgFunc_SayText2
-	DECL_DETOUR(MsgFunc_SayText2, bf_read &msg);
-
-	// CInput::_DecodeUserCmdFromBuffer
-	DECL_DETOUR(DecodeUserCmdFromBuffer, int nSlot, int buf, signed int sequence_number);
 
 	// CInput::CreateMove
 	DECL_DETOUR(CInput_CreateMove, int sequence_number, float input_sample_frametime, bool active);
 
 	// CInput::GetButtonBits
 	DECL_DETOUR(GetButtonBits, bool bResetState);
-
-	// CInput::SteamControllerMove
-	DECL_DETOUR(SteamControllerMove, int nSlot, float flFrametime, CUserCmd *cmd);  //is it slot though? :thinking:
-
 	// ClientModeShared::OverrideView
 	DECL_DETOUR(OverrideView, CViewSetup *m_View);
-
-	DECL_DETOUR_COMMAND(playvideo_end_level_transition);
 
 	bool Init() override;
 	void Shutdown() override;

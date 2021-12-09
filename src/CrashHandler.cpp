@@ -1,6 +1,6 @@
 #include "CrashHandler.hpp"
 
-#include "SAR.hpp"
+#include "PluginMain.hpp"
 #include "Version.hpp"
 
 #include <stdint.h>
@@ -86,7 +86,7 @@ static void handler(int signal, siginfo_t *info, void *ucontext)
 		finish;
 	}
 
-	fputs("SAR " SAR_VERSION " (Built " SAR_BUILT ")\n", f);
+	fputs(PLUGIN_NAME " " PLUGIN_VERSION " (Built " PLUGIN_BUILT ")\n", f);
 	fprintf(f, "%s caused by address 0x%08x\n", signame, (uint32_t)faultaddr);
 
 #ifdef _WIN32

@@ -4,7 +4,7 @@
 #include "Modules/Client.hpp"
 #include "Modules/Console.hpp"
 #include "Modules/Server.hpp"
-#include "SAR.hpp"
+#include "PluginMain.hpp"
 
 #include <cstring>
 
@@ -98,25 +98,4 @@ int16_t OffsetFinder::Find(RecvTable *table, const char *propName) {
 	}
 
 	return 0;
-}
-
-// Commands
-
-CON_COMMAND(sar_find_server_offset, "sar_find_server_offset <class_name> <prop_name> - finds prop offset in specified server class\n") {
-	if (args.ArgC() != 3) {
-		return console->Print(sar_find_server_offset.ThisPtr()->m_pszHelpString);
-	}
-
-	auto offset = 0;
-	offsetFinder->ServerSide(args[1], args[2], &offset);
-	console->Print("%s::%s = %d\n", args[1], args[2], offset);
-}
-CON_COMMAND(sar_find_client_offset, "sar_find_client_offset <class_name> <prop_name> - finds prop offset in specified client class\n") {
-	if (args.ArgC() != 3) {
-		return console->Print(sar_find_client_offset.ThisPtr()->m_pszHelpString);
-	}
-
-	auto offset = 0;
-	offsetFinder->ClientSide(args[1], args[2], &offset);
-	console->Print("%s::%s = %d\n", args[1], args[2], offset);
 }

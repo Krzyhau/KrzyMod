@@ -2,7 +2,7 @@
 
 #include "Game.hpp"
 #include "Interface.hpp"
-#include "Offsets.hpp"
+#include "Offsets/Offsets.hpp"
 #include "Utils.hpp"
 
 unsigned long Scheme::GetDefaultFont() {

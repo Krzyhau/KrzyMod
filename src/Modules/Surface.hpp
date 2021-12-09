@@ -1,7 +1,7 @@
 #pragma once
 #include "Interface.hpp"
 #include "Module.hpp"
-#include "Offsets.hpp"
+#include "Offsets/Offsets.hpp"
 #include "Utils.hpp"
 
 #include <stdarg.h>

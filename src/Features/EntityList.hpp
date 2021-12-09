@@ -13,7 +13,3 @@ public:
 };
 
 extern EntityList *entityList;
-
-extern Command sar_list_ents;
-extern Command sar_find_ent;
-extern Command sar_find_ents;

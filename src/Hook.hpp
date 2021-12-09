@@ -42,13 +42,21 @@ public:
 		this->enabled = false;
 	}
 
-	static void DisableAll();
+	static std::vector<Hook*> GetHooks() {
+		static std::vector<Hook *> hooks;
+		return hooks;
+	}
+
+	static void DisableAll() {
+		for (Hook *h : GetHooks()) {
+			h->Disable();
+		}
+	}
+
 
 private:
 	void *func;
 	void *hook;
 	bool enabled;
 	uint8_t origCode[5];
-
-	static std::vector<Hook *> hooks;
 };

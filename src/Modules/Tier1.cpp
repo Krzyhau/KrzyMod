@@ -2,8 +2,8 @@
 
 #include "Game.hpp"
 #include "Interface.hpp"
-#include "Offsets.hpp"
-#include "SAR.hpp"
+#include "Offsets/Offsets.hpp"
+#include "PluginMain.hpp"
 #include "Utils.hpp"
 
 bool Tier1::Init() {

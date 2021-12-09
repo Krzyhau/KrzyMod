@@ -7,6 +7,7 @@
 #include "Modules/Client.hpp"
 #include "Modules/Surface.hpp"
 #include "Modules/VScript.hpp"
+#include "Modules/Console.hpp"
 #include "Event.hpp"
 
 #include <random>
@@ -19,15 +20,15 @@
 
 KrzyMod krzyMod;
 
-Variable sar_krzymod_enabled("sar_krzymod_enabled", "0", "Enables KrzyMod (TM).\n");
-Variable sar_krzymod_time_base("sar_krzymod_time_base", "30", 5.0f, 3600.0f, "The base time for all timers in KrzyMod.\n");
-Variable sar_krzymod_timer_multiplier("sar_krzymod_timer_multiplier", "1", 0, "Multiplier for the main KrzyMod timer.\n");
-Variable sar_krzymod_primary_font("sar_krzymod_primary_font", "92", 0, "Change font of KrzyMod.\n");
-Variable sar_krzymod_secondary_font("sar_krzymod_secondary_font", "97", 0, "Change font of KrzyMod.\n");
-Variable sar_krzymod_debug("sar_krzymod_debug", "0", "Debugs KrzyMod.\n");
-Variable sar_krzymod_double_numbering("sar_krzymod_double_numbering", "0", "Uses different numbers for every voting in KrzyMod\n");
-Variable sar_krzymod_vote_channel("sar_krzymod_vote_channel", "krzyhau", "Sets a twitch channel from which votes should be read.\n", 0);
-Variable sar_krzymod_vote_proportional("sar_krzymod_vote_proportional", "1", 0, 1, "Should KrzyMod use proportional voting? (x% means effect has x% to be activated).\n", 0);
+Variable krzymod_enabled("krzymod_enabled", "0", "Enables KrzyMod (TM).\n");
+Variable krzymod_time_base("krzymod_time_base", "30", 5.0f, 3600.0f, "The base time for all timers in KrzyMod.\n");
+Variable krzymod_timer_multiplier("krzymod_timer_multiplier", "1", 0, "Multiplier for the main KrzyMod timer.\n");
+Variable krzymod_primary_font("krzymod_primary_font", "92", 0, "Change font of KrzyMod.\n");
+Variable krzymod_secondary_font("krzymod_secondary_font", "97", 0, "Change font of KrzyMod.\n");
+Variable krzymod_debug("krzymod_debug", "0", "Debugs KrzyMod.\n");
+Variable krzymod_double_numbering("krzymod_double_numbering", "0", "Uses different numbers for every voting in KrzyMod\n");
+Variable krzymod_vote_channel("krzymod_vote_channel", "krzyhau", "Sets a twitch channel from which votes should be read.\n", 0);
+Variable krzymod_vote_proportional("krzymod_vote_proportional", "1", 0, 1, "Should KrzyMod use proportional voting? (x% means effect has x% to be activated).\n", 0);
 
 KrzyModEffect::KrzyModEffect(std::string name, std::string displayName, float durationMultiplier, int groupID, void (*function)(KrzyModExecInfo info))
 	: name(name)
@@ -74,7 +75,7 @@ KrzyMod::~KrzyMod() {
 	Stop();
 }
 bool KrzyMod::ShouldDraw() {
-	return sar_krzymod_enabled.GetBool() && Hud::ShouldDraw() && sv_cheats.GetBool();
+	return krzymod_enabled.GetBool() && Hud::ShouldDraw() && sv_cheats.GetBool();
 }
 bool KrzyMod::GetCurrentSize(int &w, int &h) {
 	return false;
@@ -82,7 +83,7 @@ bool KrzyMod::GetCurrentSize(int &w, int &h) {
 
 
 bool KrzyMod::IsEnabled() {
-	return sar_krzymod_enabled.GetBool() && sv_cheats.GetBool() && engine->isRunning() && !engine->IsGamePaused();
+	return krzymod_enabled.GetBool() && sv_cheats.GetBool() && engine->isRunning() && !engine->IsGamePaused();
 }
 
 // literally every single bit of logic related to KrzyMod.
@@ -95,18 +96,18 @@ void KrzyMod::Update() {
 
 	// stop everything if not enabled, and update the start timer because
 	// i'm too lazy to detect when the mod is being enabled.
-	if (!sar_krzymod_enabled.GetBool()) {
+	if (!krzymod_enabled.GetBool()) {
 		ResetTimer();
 		Stop();
 	}
 	
 	else {
 		//update twitch connection accordingly
-		if (twitchCon.GetChannel().compare(sar_krzymod_vote_channel.GetString()) != 0) {
-			twitchCon.SetChannel(sar_krzymod_vote_channel.GetString());
+		if (twitchCon.GetChannel().compare(krzymod_vote_channel.GetString()) != 0) {
+			twitchCon.SetChannel(krzymod_vote_channel.GetString());
 		}
 		if (!twitchCon.IsActive()) {
-			twitchCon.SetChannel(sar_krzymod_vote_channel.GetString());
+			twitchCon.SetChannel(krzymod_vote_channel.GetString());
 			twitchCon.Connect();
 		}
 
@@ -127,19 +128,19 @@ void KrzyMod::Update() {
 	deltaTime = fminf(deltaTime, 0.1f);
 
 	// manipulate second starting time point depending on how values changed
-	if (duration != sar_krzymod_time_base.GetFloat()) {
-		float newTime = (GetTime(true) / duration) * sar_krzymod_time_base.GetFloat();
+	if (duration != krzymod_time_base.GetFloat()) {
+		float newTime = (GetTime(true) / duration) * krzymod_time_base.GetFloat();
 		
 		auto newTimespan = std::chrono::duration_cast<std::chrono::high_resolution_clock::duration>(std::chrono::duration<float>(newTime));
 		startTimeModified = timeNow - newTimespan;
 
-		duration = sar_krzymod_time_base.GetFloat();
+		duration = krzymod_time_base.GetFloat();
 	}
-	if (sar_krzymod_timer_multiplier.GetFloat() != 1) {
-		float advanceTime = fabs(sar_krzymod_timer_multiplier.GetFloat() - 1.0f) * deltaTime;
+	if (krzymod_timer_multiplier.GetFloat() != 1) {
+		float advanceTime = fabs(krzymod_timer_multiplier.GetFloat() - 1.0f) * deltaTime;
 
 		auto advanceTimespan = std::chrono::duration_cast<std::chrono::high_resolution_clock::duration>(std::chrono::duration<float>(advanceTime));
-		if (sar_krzymod_timer_multiplier.GetFloat() > 0) {
+		if (krzymod_timer_multiplier.GetFloat() > 0) {
 			startTimeModified -= advanceTimespan;
 		} else {
 			startTimeModified += advanceTimespan;
@@ -176,7 +177,7 @@ void KrzyMod::Update() {
 	});
 
 	// resetting timer and activating most voted effect
-	if (GetTime(true) > sar_krzymod_time_base.GetFloat()) {
+	if (GetTime(true) > krzymod_time_base.GetFloat()) {
 		if (selectedEffect != nullptr && evaluatedVoting) {
 			ActivateEffect(selectedEffect);
 			evaluatedVoting = false;
@@ -195,7 +196,7 @@ void KrzyMod::Update() {
 
 	// adding new effects for the voting
 	if (votes[0].effect == nullptr) {
-		int beginNumber = (oldVotes[0].voteNumber == 1 && sar_krzymod_double_numbering.GetBool()) ? 5 : 1;
+		int beginNumber = (oldVotes[0].voteNumber == 1 && krzymod_double_numbering.GetBool()) ? 5 : 1;
 		for (int i = 0; i < 4; i++) {
 			votes[i].voteNumber = beginNumber + i;
 			votes[i].votes = 0;
@@ -223,10 +224,10 @@ void KrzyMod::Update() {
 	}
 
 	// evaluating the voting
-	if (!evaluatedVoting && sar_krzymod_time_base.GetFloat() - GetTime(true) < 1.0) {
+	if (!evaluatedVoting && krzymod_time_base.GetFloat() - GetTime(true) < 1.0) {
 		
 		KrzyModVote *vote = &votes[0];
-		if (sar_krzymod_vote_proportional.GetBool()) {
+		if (krzymod_vote_proportional.GetBool()) {
 			// proportional. evaluate chances for each effect and randomly assign one
 			int totalVoteCount = 0;
 			for (int i = 0; i < 4; i++) totalVoteCount += votes[i].votes;
@@ -301,17 +302,17 @@ void KrzyMod::ResetTimer() {
 	auto timeNow = std::chrono::high_resolution_clock::now();
 	startTime = timeNow;
 	startTimeModified = timeNow;
-	duration = sar_krzymod_time_base.GetFloat();
+	duration = krzymod_time_base.GetFloat();
 }
 
 // Activating modifier by adding a new ActiveKrzyModifier into the list
 void KrzyMod::ActivateEffect(KrzyModEffect *effect) {
-	if (sar_krzymod_debug.GetBool()) {
+	if (krzymod_debug.GetBool()) {
 		//console->Print("Activating KrzyMod effect %s. Next effect: %s\n", mod->displayName.c_str(), GetNextModifier(false)->displayName.c_str());
 	}
 	// the time is calculated based on own multiplier and base time specified by cvar
 	float durMult = effect->durationMultiplier == 0 ? 2.5f : effect->durationMultiplier; 
-	float duration = durMult * sar_krzymod_time_base.GetFloat();
+	float duration = durMult * krzymod_time_base.GetFloat();
 	KrzyModActiveEffect activeEffect = {effect, 0, duration};
 	activeEffects.push_back(activeEffect);
 	activeEffect.Execute(INITIAL, true, effect);
@@ -410,10 +411,10 @@ void KrzyMod::InvokeTraceRayEvents(CGameTrace *tr) {
 
 // Paints not only KrzyMod hud but also all of the active effects
 void KrzyMod::Paint(int slot) {
-	if (!sar_krzymod_enabled.GetBool() || !sv_cheats.GetBool()) return;
+	if (!krzymod_enabled.GetBool() || !sv_cheats.GetBool()) return;
 
-	auto font = scheme->GetDefaultFont() + sar_krzymod_primary_font.GetInt();
-	auto font2 = scheme->GetDefaultFont() + sar_krzymod_secondary_font.GetInt();
+	auto font = scheme->GetDefaultFont() + krzymod_primary_font.GetInt();
+	auto font2 = scheme->GetDefaultFont() + krzymod_secondary_font.GetInt();
 
 	int lineHeight = surface->GetFontHeight(font);
 	int lineHeight2 = surface->GetFontHeight(font2);
@@ -529,7 +530,7 @@ void KrzyMod::Paint(int slot) {
 	}
 }
 
-DECL_COMMAND_COMPLETION(sar_krzymod_activate) {
+DECL_COMMAND_COMPLETION(krzymod_activate) {
 	std::set<std::string> nameList;
 	for (KrzyModEffect *effect : krzyMod.effects) {
 		if (nameList.size() == COMMAND_COMPLETION_MAXITEMS) {
@@ -542,12 +543,12 @@ DECL_COMMAND_COMPLETION(sar_krzymod_activate) {
 	for (std::string name : nameList) {items.push_back(name);}
 	FINISH_COMMAND_COMPLETION();
 }
-CON_COMMAND_F_COMPLETION(sar_krzymod_activate, 
-	"sar_krzymod_activate [effect] - activate effect with given name\n", 
-	0, AUTOCOMPLETION_FUNCTION(sar_krzymod_activate)
+CON_COMMAND_F_COMPLETION(krzymod_activate, 
+	"krzymod_activate [effect] - activate effect with given name\n", 
+	0, AUTOCOMPLETION_FUNCTION(krzymod_activate)
 ) {
 	if (args.ArgC() != 2) {
-		return console->Print(sar_krzymod_activate.ThisPtr()->m_pszHelpString);
+		return console->Print(krzymod_activate.ThisPtr()->m_pszHelpString);
 	}
 	for (KrzyModEffect *effect : krzyMod.effects) {
 		if (effect->name.compare(args[1]) == 0) {
@@ -561,7 +562,7 @@ CON_COMMAND_F_COMPLETION(sar_krzymod_activate,
 
 
 
-DECL_COMMAND_COMPLETION(sar_krzymod_deactivate) {
+DECL_COMMAND_COMPLETION(krzymod_deactivate) {
 	std::set<std::string> nameList;
 	for (KrzyModActiveEffect &eff : krzyMod.activeEffects) {
 		if (nameList.size() == COMMAND_COMPLETION_MAXITEMS) {
@@ -576,12 +577,12 @@ DECL_COMMAND_COMPLETION(sar_krzymod_deactivate) {
 	}
 	FINISH_COMMAND_COMPLETION();
 }
-CON_COMMAND_F_COMPLETION(sar_krzymod_deactivate, 
-	"sar_krzymod_deactivate [effect] - stops all instances of an effect with given name\n", 
-	0, AUTOCOMPLETION_FUNCTION(sar_krzymod_deactivate)
+CON_COMMAND_F_COMPLETION(krzymod_deactivate, 
+	"krzymod_deactivate [effect] - stops all instances of an effect with given name\n", 
+	0, AUTOCOMPLETION_FUNCTION(krzymod_deactivate)
 ){
 	if (args.ArgC() != 2) {
-		return console->Print(sar_krzymod_deactivate.ThisPtr()->m_pszHelpString);
+		return console->Print(krzymod_deactivate.ThisPtr()->m_pszHelpString);
 	}
 	for (KrzyModEffect *effect : krzyMod.effects) {
 		if (effect->name.compare(args[1]) == 0) {
@@ -593,7 +594,7 @@ CON_COMMAND_F_COMPLETION(sar_krzymod_deactivate,
 	console->Print("Cannot find effect \"%s\".\n", args[1]);
 }
 
-CON_COMMAND(sar_krzymod_list, "sar_krzymod_list - shows a list of all effects") {
+CON_COMMAND(krzymod_list, "krzymod_list - shows a list of all effects") {
 	std::set<std::string> nameList;
 	for (KrzyModEffect *effect : krzyMod.effects) {
 		// putting it into the set first to have it ordered alphabetically
@@ -605,9 +606,9 @@ CON_COMMAND(sar_krzymod_list, "sar_krzymod_list - shows a list of all effects") 
 	}
 }
 
-CON_COMMAND(sar_krzymod_vote, "sar_krzymod_vote [number] - votes for an effect with given number") {
+CON_COMMAND(krzymod_vote, "krzymod_vote [number] - votes for an effect with given number") {
 	if (args.ArgC() != 2) {
-		return console->Print(sar_krzymod_vote.ThisPtr()->m_pszHelpString);
+		return console->Print(krzymod_vote.ThisPtr()->m_pszHelpString);
 	}
 	int voteNum = std::atoi(args[1]);
 	krzyMod.Vote(voteNum);
@@ -639,11 +640,11 @@ CREATE_KRZYMOD_SIMPLE(OVERRIDE_CAMERA, viewUpsideDown, "Upside Down View", 2.5f,
 }
 
 CREATE_KRZYMOD_SIMPLE(INITIAL, metaFasterDelay, "x4 KrzyMod Speed", 1.0f, 1) {
-	KRZYMOD_CONTROL_CVAR(sar_krzymod_timer_multiplier, 4);
+	KRZYMOD_CONTROL_CVAR(krzymod_timer_multiplier, 4);
 }
 
 CREATE_KRZYMOD_SIMPLE(INITIAL, metaPause, "Pause KrzyMod", 1.0f, 1) {
-	KRZYMOD_CONTROL_CVAR(sar_krzymod_timer_multiplier, 0);
+	KRZYMOD_CONTROL_CVAR(krzymod_timer_multiplier, 0);
 }
 
 CREATE_KRZYMOD_SIMPLE(HUD_PAINT, visualSnapchatMode, "Snapchat Mode", 2.5f, 0) {
@@ -850,15 +851,6 @@ CREATE_KRZYMOD_SIMPLE(PROCESS_MOVEMENT, moveAirlock, "No Air Control", 3.5f, 0) 
 	}
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, moveAbh, "ABH", 3.5f, 0) {
-	KRZYMOD_CONTROL_CVAR(sar_duckjump, 1);
-	KRZYMOD_CONTROL_CVAR(sar_jumpboost, 1);
-}
-
-CREATE_KRZYMOD_SIMPLE(INITIAL, moveNoAirlock, "Better Air Control", 3.5f, 0) {
-	KRZYMOD_CONTROL_CVAR(sar_aircontrol, 1);
-}
-
 CREATE_KRZYMOD_SIMPLE(INITIAL, gameSmallTimescale, "Timescale 0.2", 1.5f, 2) {
 	KRZYMOD_CONTROL_CVAR(host_timescale, 0.5);
 }
@@ -881,7 +873,7 @@ CREATE_KRZYMOD_SIMPLE(INITIAL, gameMaxBounciness, "Maximum Repulsiveness", 3.5f,
 
 CREATE_KRZYMOD(moveAutojump, "Jump Script", 3.5f, 0) {
 	if (info.execType == INITIAL) {
-		KRZYMOD_CONTROL_CVAR(sar_autojump, 1);
+		KRZYMOD_CONTROL_CVAR(sv_krzymod_autojump, 1);
 	}
 	if(info.execType == ENGINE_TICK) {
 		engine->ExecuteCommand("+jump");
@@ -928,11 +920,11 @@ CREATE_KRZYMOD(moveDrunk, "Drunk", 3.5f, 5) {
 }
 
 CREATE_KRZYMOD_SIMPLE(INITIAL, moveMarioJump, "Mario Jump", 3.5f, 0) {
-	KRZYMOD_CONTROL_CVAR(sar_jump_height, 150);
+	KRZYMOD_CONTROL_CVAR(sv_krzymod_jump_height, 150);
 }
 
 CREATE_KRZYMOD_SIMPLE(INITIAL, moveStanleyParable, "The Stanley Parable", 3.5f, 0) {
-	KRZYMOD_CONTROL_CVAR(sar_jump_height, 0);
+	KRZYMOD_CONTROL_CVAR(sv_krzymod_jump_height, 0);
 }
 
 
@@ -1001,11 +993,30 @@ CREATE_KRZYMOD_SIMPLE(INITIAL, visualPaintItWhite, "Paint It, White", 2.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(mat_fullbright, 2);
 }
 
-CREATE_KRZYMOD_SIMPLE(INITIAL, visualOrtho, "Orthographic View", 1.5f, 0) {
-	KRZYMOD_CONTROL_CVAR(r_portalsopenall, 1);
-	KRZYMOD_CONTROL_CVAR(sar_cam_ortho, 1);
-	KRZYMOD_CONTROL_CVAR(sar_cam_ortho_nearz, -10000);
-	KRZYMOD_CONTROL_CVAR(cl_skip_player_render_in_main_view, 0);
+CREATE_KRZYMOD(visualOrtho, "Orthographic View", 1.5f, 0) {
+	if (info.execType == INITIAL) {
+		KRZYMOD_CONTROL_CVAR(r_portalsopenall, 1);
+		KRZYMOD_CONTROL_CVAR(cl_skip_player_render_in_main_view, 0);
+	}
+
+	if (info.execType == OVERRIDE_CAMERA) {
+		auto viewSetup = (CViewSetup *)info.data;
+		viewSetup->m_bOrtho = true;
+
+		int width, height;
+		engine->GetScreenSize(nullptr, width, height);
+
+		float halfWidth = width * 0.5f;
+		float halfHeight = height * 0.5f;
+
+		viewSetup->m_OrthoRight = halfWidth;
+		viewSetup->m_OrthoLeft = -halfWidth;
+		viewSetup->m_OrthoBottom = halfHeight;
+		viewSetup->m_OrthoTop = -halfHeight;
+
+		viewSetup->zNear = -10000;
+	}
+	
 }
 
 CREATE_KRZYMOD_SIMPLE(INITIAL, gamePortalMachineGun, "Portal MacHINE GUN!", 2.5f, 0) {
@@ -1036,7 +1047,7 @@ CREATE_KRZYMOD_SIMPLE(INITIAL, gameNegativeFriction, "Weeeeeeeeee!!!", 3.5f, 0) 
 
 CREATE_KRZYMOD_SIMPLE(INITIAL, gameMoonGravity, "Moon Gravity", 2.5f, 0) {
 	KRZYMOD_CONTROL_CVAR(sv_gravity, 200);
-	KRZYMOD_CONTROL_CVAR(sar_jump_height, 135);
+	KRZYMOD_CONTROL_CVAR(sv_krzymod_jump_height, 135);
 }
 
 CREATE_KRZYMOD(viewBarrelRoll, "Do A Barrel Roll!", 1.5f, 0) {
@@ -1356,37 +1367,13 @@ CREATE_KRZYMOD(gameSpaceCoreOrbit, "Space Core Orbit", 1.6f, 0) {
 		if (!player) return;
 
 		// the pain i have to get through to make these models function properly
-
-		if (!precachedLastFrame) {
-			bool spaceCoreExists = false;
-
-			for (int i = 0; i < Offsets::NUM_ENT_ENTRIES; ++i) {
-				void *ent = server->m_EntPtrArray[i].m_pEntity;
-				if (!ent) continue;
-
-				const char *entName = server->GetEntityName(ent);
-				if (entName == nullptr) continue;
-				if (std::strstr(entName, "__krzymod_space_core")) {
-					spaceCoreExists = true;
-					break;
-				}
-			}
-
-			if (!spaceCoreExists) {
-				engine->ExecuteCommand("prop_dynamic_create npcs/personality_sphere/personality_sphere_skins");
-				engine->ExecuteCommand("ent_fire dynamic_prop kill");
-				precachedLastFrame = true;
-			}
-		}
-		else {
-			precachedLastFrame = false;
-		}
-
-		if (!precachedLastFrame) {
-			vscript->RunScript(R"NUT(
-				local name = "__krzymod_space_core_";
-				local relay = null;
-				if(!(relay = Entities.FindByName(null, name+"relay"))){
+		vscript->RunScript(R"NUT(
+			local name = "__krzymod_space_core_";
+			local relay = null;
+			if(!(relay = Entities.FindByName(null, name+"relay"))){
+				if(!(Entities.FindByClassname(null, "dynamic_prop"))){
+					SendToConsole("prop_dynamic_create npcs/personality_sphere/personality_sphere_skins");
+				}else{
 					for(local i = 0; i < 20; i++){
 						local e = Entities.CreateByClassname("prop_dynamic");
 						e.SetModel("models/npcs/personality_sphere/personality_sphere_skins.mdl");
@@ -1399,7 +1386,9 @@ CREATE_KRZYMOD(gameSpaceCoreOrbit, "Space Core Orbit", 1.6f, 0) {
 					relay = Entities.CreateByClassname("logic_relay");
 					relay.__KeyValueFromString("targetname", name+"relay");
 					EntFireByHandle(relay, "AddOutput", "OnTrigger __krzymod_space_core_*,Kill,,0.2,-1", 0, null, null);
+					SendToConsole("ent_fire dynamic_prop kill");
 				}
+			}else{
 				for(local i = 0; i < 20; i++){
 					local e = Entities.FindByName(null, name+i);
 					local ppos = GetPlayer().GetOrigin();
@@ -1410,8 +1399,8 @@ CREATE_KRZYMOD(gameSpaceCoreOrbit, "Space Core Orbit", 1.6f, 0) {
 				}
 				EntFireByHandle(relay, "CancelPending", "", 0, null, null);
 				EntFireByHandle(relay, "Trigger", "", 0, null, null);
-			)NUT");
-		}
+			}
+		)NUT");
 
 
 		// playing random space core sound every 0.25 second
@@ -1423,7 +1412,7 @@ CREATE_KRZYMOD(gameSpaceCoreOrbit, "Space Core Orbit", 1.6f, 0) {
 				sound += Utils::ssprintf("babbleb%02d.wav 0.5", Math::RandomNumber(1, 35));
 			}
 			engine->ExecuteCommand(sound.c_str());
-			lastSound += 15;
+			lastSound += 20;
 		} else {
 			lastSound--;
 		}

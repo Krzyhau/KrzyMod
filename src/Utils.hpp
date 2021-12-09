@@ -26,7 +26,7 @@ namespace Utils {
 	bool ICompare(const std::string &a, const std::string &b);
 	std::string ssprintf(const char *fmt, ...);
 	int ConvertFromSrgb(int s);
-	std::string GetSARPath();
+	std::string GetPluginPath();
 	std::optional<Color> GetColor(const char *str, bool to_linear);
 }  // namespace Utils
 

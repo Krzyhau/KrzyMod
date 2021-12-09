@@ -15,6 +15,3 @@ private:
 };
 
 extern OffsetFinder *offsetFinder;
-
-extern Command sar_find_serverclass;
-extern Command sar_find_clientclass;

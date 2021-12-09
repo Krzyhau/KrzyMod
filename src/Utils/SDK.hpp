@@ -1,6 +1,6 @@
 #pragma once
 #pragma warning(suppress : 26495)
-#include "Offsets.hpp"
+#include "Offsets/Offsets.hpp"
 
 #include <cmath>
 #include <cstdint>

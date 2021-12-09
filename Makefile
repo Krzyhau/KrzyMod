@@ -35,13 +35,13 @@ LDFLAGS=-m32 -shared -lstdc++fs -Llib/ffmpeg/lib/linux -lavformat -lavcodec -lav
 # Import config.mk, which can be used for optional config
 -include config.mk
 
-all: sar.so
+all: krzymod.so
 clean:
-	rm -rf $(ODIR) sar.so src/Version.hpp
+	rm -rf $(ODIR) krzymod.so src/Version.hpp
 
 -include $(DEPS)
 
-sar.so: src/Version.hpp $(OBJS)
+krzymod.so: src/Version.hpp $(OBJS)
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 $(ODIR)/%.o: $(SDIR)/%.cpp
@@ -49,9 +49,7 @@ $(ODIR)/%.o: $(SDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -MMD -c $< -o $@
 
 src/Version.hpp: .FORCE
-	echo "#define SAR_VERSION \"$(VERSION)\"" >"$@"
-	if [ -z "$$RELEASE_BUILD" ]; then echo "#define SAR_DEV_BUILD 1" >>"$@"; fi
+	echo "#define PLUGIN_VERSION \"$(VERSION)\"" >"$@"
+	if [ -z "$$RELEASE_BUILD" ]; then echo "#define PLUGIN_DEV_BUILD 1" >>"$@"; fi
 
-cvars: doc/cvars.md
-doc/cvars.md:
-	node cvars.js "$(STEAM)Portal 2"
+

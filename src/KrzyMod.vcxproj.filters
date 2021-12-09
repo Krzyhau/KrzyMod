@@ -1,0 +1,604 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\lib\minhook\buffer.c">
+      <Filter>lib\minhook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\minhook\trampoline.c">
+      <Filter>lib\minhook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\minhook\hook.c">
+      <Filter>lib\minhook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\minhook\hde\hde64.c">
+      <Filter>lib\minhook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\minhook\hde\hde32.c">
+      <Filter>lib\minhook</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\SDK.cpp">
+      <Filter>KrzyMod\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\Client.cpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\Console.cpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\Engine.cpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\InputSystem.cpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\Module.cpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\Scheme.cpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\Server.cpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\Surface.cpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\Tier1.cpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\VGui.cpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Feature.cpp">
+      <Filter>KrzyMod\Features</Filter>
+    </ClCompile>
+    <ClCompile Include="Cheats.cpp">
+      <Filter>KrzyMod</Filter>
+    </ClCompile>
+    <ClCompile Include="CrashHandler.cpp">
+      <Filter>KrzyMod</Filter>
+    </ClCompile>
+    <ClCompile Include="Command.cpp">
+      <Filter>KrzyMod</Filter>
+    </ClCompile>
+    <ClCompile Include="Event.cpp">
+      <Filter>KrzyMod</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>KrzyMod</Filter>
+    </ClCompile>
+    <ClCompile Include="Interface.cpp">
+      <Filter>KrzyMod</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginMain.cpp">
+      <Filter>KrzyMod</Filter>
+    </ClCompile>
+    <ClCompile Include="Variable.cpp">
+      <Filter>KrzyMod</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Memory.cpp">
+      <Filter>KrzyMod\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\EntityList.cpp">
+      <Filter>KrzyMod\Features</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\OffsetFinder.cpp">
+      <Filter>KrzyMod\Features</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils.cpp">
+      <Filter>KrzyMod</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Math.cpp">
+      <Filter>KrzyMod\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\json11.cpp">
+      <Filter>KrzyMod\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\lodepng.cpp">
+      <Filter>KrzyMod\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\lodepng.cpp">
+      <Filter>KrzyMod\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\MaterialSystem.cpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\KrzyMod.cpp">
+      <Filter>KrzyMod\Features</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\VScript.cpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\TwitchConnection.cpp">
+      <Filter>KrzyMod\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Offsets\Offsets.cpp">
+      <Filter>KrzyMod\Offsets</Filter>
+    </ClCompile>
+    <ClCompile Include="Offsets\Windows\Portal2.cpp">
+      <Filter>KrzyMod\Offsets\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="Offsets\Windows\PortalReloaded.cpp">
+      <Filter>KrzyMod\Offsets\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="Offsets\Windows\PortalStoriesMel.cpp">
+      <Filter>KrzyMod\Offsets\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="Offsets\Windows\ThinkingWithTimeMachine.cpp">
+      <Filter>KrzyMod\Offsets\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="Offsets\Windows\ApertureTag.cpp">
+      <Filter>KrzyMod\Offsets\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="Offsets\Linux\PortalReloaded.cpp">
+      <Filter>KrzyMod\Offsets\Linux</Filter>
+    </ClCompile>
+    <ClCompile Include="Offsets\Linux\PortalStoriesMel.cpp">
+      <Filter>KrzyMod\Offsets\Linux</Filter>
+    </ClCompile>
+    <ClCompile Include="Offsets\Linux\ThinkingWithTimeMachine.cpp">
+      <Filter>KrzyMod\Offsets\Linux</Filter>
+    </ClCompile>
+    <ClCompile Include="Offsets\Linux\ApertureTag.cpp">
+      <Filter>KrzyMod\Offsets\Linux</Filter>
+    </ClCompile>
+    <ClCompile Include="Offsets\Linux\Portal2.cpp">
+      <Filter>KrzyMod\Offsets\Linux</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\lib\minhook\buffer.h">
+      <Filter>lib\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\minhook\trampoline.h">
+      <Filter>lib\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\minhook\hde\pstdint.h">
+      <Filter>lib\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\minhook\hde\table32.h">
+      <Filter>lib\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\minhook\hde\table64.h">
+      <Filter>lib\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\minhook\hde\hde64.h">
+      <Filter>lib\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\minhook\hde\hde32.h">
+      <Filter>lib\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\minhook\MinHook.h">
+      <Filter>lib\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Math.hpp">
+      <Filter>KrzyMod\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\SDK.hpp">
+      <Filter>KrzyMod\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Memory.hpp">
+      <Filter>KrzyMod\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Platform.hpp">
+      <Filter>KrzyMod\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Client.hpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Console.hpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Engine.hpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\InputSystem.hpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Module.hpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Scheme.hpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Server.hpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Surface.hpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Tier1.hpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\VGui.hpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Features\Feature.hpp">
+      <Filter>KrzyMod\Features</Filter>
+    </ClInclude>
+    <ClInclude Include="Cheats.hpp">
+      <Filter>KrzyMod</Filter>
+    </ClInclude>
+    <ClInclude Include="CrashHandler.hpp">
+      <Filter>KrzyMod</Filter>
+    </ClInclude>
+    <ClInclude Include="Command.hpp">
+      <Filter>KrzyMod</Filter>
+    </ClInclude>
+    <ClInclude Include="Event.hpp">
+      <Filter>KrzyMod</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.hpp">
+      <Filter>KrzyMod</Filter>
+    </ClInclude>
+    <ClInclude Include="Interface.hpp">
+      <Filter>KrzyMod</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginMain.hpp">
+      <Filter>KrzyMod</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.hpp">
+      <Filter>KrzyMod</Filter>
+    </ClInclude>
+    <ClInclude Include="Variable.hpp">
+      <Filter>KrzyMod</Filter>
+    </ClInclude>
+    <ClInclude Include="Features\EntityList.hpp">
+      <Filter>KrzyMod\Features</Filter>
+    </ClInclude>
+    <ClInclude Include="Features\OffsetFinder.hpp">
+      <Filter>KrzyMod\Features</Filter>
+    </ClInclude>
+    <ClInclude Include="Games\Linux\ApertureTag.hpp">
+      <Filter>KrzyMod\Games\Linux</Filter>
+    </ClInclude>
+    <ClInclude Include="Games\Linux\PortalStoriesMel.hpp">
+      <Filter>KrzyMod\Games\Linux</Filter>
+    </ClInclude>
+    <ClInclude Include="Games\Windows\ApertureTag.hpp">
+      <Filter>KrzyMod\Games\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="Games\Windows\PortalStoriesMel.hpp">
+      <Filter>KrzyMod\Games\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules.hpp">
+      <Filter>KrzyMod</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\json11.hpp">
+      <Filter>KrzyMod\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\lodepng.hpp">
+      <Filter>KrzyMod\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\Export.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\Ftp.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\Http.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\IpAddress.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\Packet.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\Socket.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\SocketHandle.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\SocketSelector.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\TcpListener.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\TcpSocket.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\UdpSocket.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Clock.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Err.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Export.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\FileInputStream.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\InputStream.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Lock.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\MemoryInputStream.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Mutex.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\NativeActivity.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\NonCopyable.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Sleep.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\String.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Thread.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\ThreadLocal.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\ThreadLocalPtr.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Time.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Utf.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Vector2.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Vector3.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Config.hpp">
+      <Filter>lib\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\GpuPreference.hpp">
+      <Filter>lib\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Graphics.hpp">
+      <Filter>lib\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Main.hpp">
+      <Filter>lib\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network.hpp">
+      <Filter>lib\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System.hpp">
+      <Filter>lib\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\lodepng.hpp">
+      <Filter>KrzyMod\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\Export.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\Ftp.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\Http.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\IpAddress.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\Packet.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\Socket.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\SocketHandle.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\SocketSelector.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\TcpListener.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\TcpSocket.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network\UdpSocket.hpp">
+      <Filter>lib\SFML\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Clock.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Err.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Export.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\FileInputStream.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\InputStream.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Lock.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\MemoryInputStream.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Mutex.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\NativeActivity.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\NonCopyable.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Sleep.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\String.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Thread.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\ThreadLocal.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\ThreadLocalPtr.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Time.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Utf.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Vector2.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System\Vector3.hpp">
+      <Filter>lib\SFML\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Config.hpp">
+      <Filter>lib\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\GpuPreference.hpp">
+      <Filter>lib\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Graphics.hpp">
+      <Filter>lib\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Main.hpp">
+      <Filter>lib\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\Network.hpp">
+      <Filter>lib\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\SFML\include\SFML\System.hpp">
+      <Filter>lib\SFML</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\MaterialSystem.hpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Features\KrzyMod.hpp">
+      <Filter>KrzyMod\Features</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\VScript.hpp">
+      <Filter>KrzyMod\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\TwitchConnection.hpp">
+      <Filter>KrzyMod\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Hook.hpp">
+      <Filter>KrzyMod</Filter>
+    </ClInclude>
+    <ClInclude Include="Offsets\Offsets.hpp">
+      <Filter>KrzyMod\Offsets</Filter>
+    </ClInclude>
+    <ClInclude Include="Offsets\Windows\ApertureTag.hpp">
+      <Filter>KrzyMod\Offsets\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="Offsets\Windows\Portal2.hpp">
+      <Filter>KrzyMod\Offsets\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="Offsets\Windows\PortalReloaded.hpp">
+      <Filter>KrzyMod\Offsets\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="Offsets\Windows\PortalStoriesMel.hpp">
+      <Filter>KrzyMod\Offsets\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="Offsets\Windows\ThinkingWithTimeMachine.hpp">
+      <Filter>KrzyMod\Offsets\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="Offsets\Linux\Portal2.hpp">
+      <Filter>KrzyMod\Offsets\Linux</Filter>
+    </ClInclude>
+    <ClInclude Include="Offsets\Linux\PortalReloaded.hpp">
+      <Filter>KrzyMod\Offsets\Linux</Filter>
+    </ClInclude>
+    <ClInclude Include="Offsets\Linux\PortalStoriesMel.hpp">
+      <Filter>KrzyMod\Offsets\Linux</Filter>
+    </ClInclude>
+    <ClInclude Include="Offsets\Linux\ThinkingWithTimeMachine.hpp">
+      <Filter>KrzyMod\Offsets\Linux</Filter>
+    </ClInclude>
+    <ClInclude Include="Offsets\Linux\ApertureTag.hpp">
+      <Filter>KrzyMod\Offsets\Linux</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="KrzyMod">
+      <UniqueIdentifier>{92afbf75-28dc-4045-af85-34b6c55400b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KrzyMod\Modules">
+      <UniqueIdentifier>{a52ec2cb-8efb-4026-ba66-d9df6c2a5909}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KrzyMod\Utils">
+      <UniqueIdentifier>{5eb5cd67-ae5d-44f0-aca8-8f66f9aa3753}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KrzyMod\Features">
+      <UniqueIdentifier>{2cad3606-019d-40fd-b1e0-16eabcd459a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib">
+      <UniqueIdentifier>{432c6e31-fbb9-4852-9bfd-74b0cc6d7a57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\minhook">
+      <UniqueIdentifier>{df38f6d3-7501-4e2a-ba0c-e8de7ad26787}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\SFML">
+      <UniqueIdentifier>{25544dbf-4c2c-4076-9dc4-94be31cd7b11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\SFML\Network">
+      <UniqueIdentifier>{bc02a0e9-9ff0-4c7f-8eb5-8d0ed2a41c05}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\SFML\System">
+      <UniqueIdentifier>{5c7739c9-9ec9-4029-8c83-4d03dd3f4637}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KrzyMod\Offsets">
+      <UniqueIdentifier>{56b78df4-db1c-44a5-9243-10415ba45a25}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KrzyMod\Offsets\Windows">
+      <UniqueIdentifier>{9e7c58b4-0f87-483c-92ab-77f4d6757512}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KrzyMod\Offsets\Linux">
+      <UniqueIdentifier>{5e8e3eca-807e-4e32-bd8d-046f8be99381}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\lib\minhook\LICENSE.txt">
+      <Filter>lib\minhook</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\lib\SFML\include\SFML\System\String.inl">
+      <Filter>lib\SFML\System</Filter>
+    </None>
+    <None Include="..\lib\SFML\include\SFML\System\Thread.inl">
+      <Filter>lib\SFML\System</Filter>
+    </None>
+    <None Include="..\lib\SFML\include\SFML\System\ThreadLocalPtr.inl">
+      <Filter>lib\SFML\System</Filter>
+    </None>
+    <None Include="..\lib\SFML\include\SFML\System\Utf.inl">
+      <Filter>lib\SFML\System</Filter>
+    </None>
+    <None Include="..\lib\SFML\include\SFML\System\Vector2.inl">
+      <Filter>lib\SFML\System</Filter>
+    </None>
+    <None Include="..\lib\SFML\include\SFML\System\Vector3.inl">
+      <Filter>lib\SFML\System</Filter>
+    </None>
+  </ItemGroup>
+</Project>

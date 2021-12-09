@@ -19,8 +19,8 @@
 #define MSG_SYMBOL "Msg"
 #define WARNING_SYMBOL "Warning"
 
-#define SAR_PRINT_COLOR Color(247, 214, 68)
-#define SAR_PRINT_ACTIVE_COLOR Color(110, 247, 76)
+#define CONSOLE_PRINT_COLOR Color(247, 214, 68)
+#define CONSOLE_PRINT_ACTIVE_COLOR Color(110, 247, 76)
 
 class Console : public Module {
 public:
@@ -49,11 +49,11 @@ public:
 public:
 	template <typename... T>
 	void Print(const char *fmt, T... args) {
-		this->ColorMsg(SAR_PRINT_COLOR, fmt, args...);
+		this->ColorMsg(CONSOLE_PRINT_COLOR, fmt, args...);
 	}
 	template <typename... T>
 	void PrintActive(const char *fmt, T... args) {
-		this->ColorMsg(SAR_PRINT_ACTIVE_COLOR, fmt, args...);
+		this->ColorMsg(CONSOLE_PRINT_ACTIVE_COLOR, fmt, args...);
 	}
 
 	bool Init() override;

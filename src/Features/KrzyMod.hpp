@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Hud/Hud.hpp"
+#include "Variable.hpp"
+#include "Modules/VGui.hpp"
 #include <list>
 #include <chrono>
 #include "Utils/TwitchConnection.hpp"
@@ -115,16 +116,16 @@ extern KrzyMod krzyMod;
 
 
 #define CREATE_KRZYMOD(name, displayName, executionTime, groupID)                                                         \
-	void krzymod_##name##_callback(KrzyModExecInfo info);                                                                    \
-	KrzyModEffect *krzymod_##name = new KrzyModEffect(#name, displayName, executionTime, groupID, krzymod_##name##_callback); \
-	void krzymod_##name##_callback(KrzyModExecInfo info)
+	void krzymod_effect_##name##_callback(KrzyModExecInfo info);                                                                    \
+	KrzyModEffect *krzymod_effect_##name = new KrzyModEffect(#name, displayName, executionTime, groupID, krzymod_effect_##name##_callback); \
+	void krzymod_effect_##name##_callback(KrzyModExecInfo info)
 
 #define CREATE_KRZYMOD_SIMPLE(type, name, displayName, executionTime, groupID)    \
-	void krzymod_##name##_callback2(KrzyModExecInfo info);                           \
+	void krzymod_effect_##name##_callback2(KrzyModExecInfo info);                           \
 	CREATE_KRZYMOD(name, displayName, executionTime, groupID) {                   \
-		if (info.execType == type) krzymod_##name##_callback2(info);                 \
+		if (info.execType == type) krzymod_effect_##name##_callback2(info);                 \
 	}                                                                             \
-	void krzymod_##name##_callback2(KrzyModExecInfo info)
+	void krzymod_effect_##name##_callback2(KrzyModExecInfo info)
 
 #define CREATE_KRZYMOD_INSTANT(name, displayName, groupID) CREATE_KRZYMOD_SIMPLE(INITIAL, name, displayName, 0.0f, groupID)
 

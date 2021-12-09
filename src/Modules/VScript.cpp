@@ -1,7 +1,7 @@
 #include "VScript.hpp"
 
 #include "Interface.hpp"
-#include "Offsets.hpp"
+#include "Offsets/Offsets.hpp"
 #include "Utils.hpp"
 #include "Command.hpp"
 #include "Console.hpp"
@@ -43,14 +43,3 @@ void VScript::Shutdown() {
 }
 
 VScript* vscript;
-
-
-
-CON_COMMAND(sar_test_vscript, "sar_test_vscript - tests vscript functionality\n") {
-	vscript->RunScript(R"#(
-		print("You should now see a set of random numbers: ");
-		for(local i=0;i<10;i++){
-			print(RandomInt(0,9));
-		} print("\n");
-	)#");
-}
