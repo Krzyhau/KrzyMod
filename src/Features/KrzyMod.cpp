@@ -26,7 +26,8 @@ Variable krzymod_timer_multiplier("krzymod_timer_multiplier", "1", 0, "Multiplie
 Variable krzymod_primary_font("krzymod_primary_font", "92", 0, "Change font of KrzyMod.\n");
 Variable krzymod_secondary_font("krzymod_secondary_font", "97", 0, "Change font of KrzyMod.\n");
 Variable krzymod_debug("krzymod_debug", "0", "Debugs KrzyMod.\n");
-Variable krzymod_double_numbering("krzymod_double_numbering", "0", "Uses different numbers for every voting in KrzyMod\n");
+Variable krzymod_vote_enabled("krzymod_vote_enabled", "1", 0,2, "Enables Twitch chat voting for KrzyMod effects.\n");
+Variable krzymod_vote_double_numbering("krzymod_vote_double_numbering", "0", "Uses different numbers for every voting in KrzyMod\n");
 Variable krzymod_vote_channel("krzymod_vote_channel", "krzyhau", "Sets a twitch channel from which votes should be read.\n", 0);
 Variable krzymod_vote_proportional("krzymod_vote_proportional", "1", 0, 1, "Should KrzyMod use proportional voting? (x% means effect has x% to be activated).\n", 0);
 
@@ -102,15 +103,17 @@ void KrzyMod::Update() {
 	}
 	
 	else {
-		//update twitch connection accordingly
-		if (twitchCon.GetChannel().compare(krzymod_vote_channel.GetString()) != 0) {
-			twitchCon.SetChannel(krzymod_vote_channel.GetString());
-		}
-		if (!twitchCon.IsActive()) {
-			twitchCon.SetChannel(krzymod_vote_channel.GetString());
-			twitchCon.Connect();
-		}
 
+		if (krzymod_vote_enabled.GetBool()) {
+			//update twitch connection accordingly
+			if (twitchCon.GetChannel().compare(krzymod_vote_channel.GetString()) != 0) {
+				twitchCon.SetChannel(krzymod_vote_channel.GetString());
+			}
+			if (!twitchCon.IsActive()) {
+				twitchCon.SetChannel(krzymod_vote_channel.GetString());
+				twitchCon.Connect();
+			}
+		}
 		// we always want sv_cheats to be enabled when krzymod is enabled. no questions.
 		if (!sv_cheats.GetBool()) sv_cheats.SetValue(true);
 	}
@@ -196,7 +199,7 @@ void KrzyMod::Update() {
 
 	// adding new effects for the voting
 	if (votes[0].effect == nullptr) {
-		int beginNumber = (oldVotes[0].voteNumber == 1 && krzymod_double_numbering.GetBool()) ? 5 : 1;
+		int beginNumber = (oldVotes[0].voteNumber == 1 && krzymod_vote_double_numbering.GetBool()) ? 5 : 1;
 		for (int i = 0; i < 4; i++) {
 			votes[i].voteNumber = beginNumber + i;
 			votes[i].votes = 0;
@@ -441,56 +444,61 @@ void KrzyMod::Paint(int slot) {
 	};
 
 	// drawing voting info
-	KrzyModVote *drawVotes = (GetTime(false) < 0.5) ? oldVotes : votes;
-	if (drawVotes->effect != nullptr) {
-		// calculating voting info
-		int totalVoteCount = 0;
-		for (int i = 0; i < 4; i++) totalVoteCount += drawVotes[i].votes;
+	if (krzymod_vote_enabled.GetInt()==1) {
+		KrzyModVote *drawVotes = (GetTime(false) < 0.5) ? oldVotes : votes;
+		if (drawVotes->effect != nullptr) {
+			// calculating voting info
+			int totalVoteCount = 0;
+			for (int i = 0; i < 4; i++) totalVoteCount += drawVotes[i].votes;
 
-		float votePercentages[4];
-		for (int i = 0; i < 4;i++) {
-			votePercentages[i] = (totalVoteCount == 0) ? 0 : ((drawVotes[i].votes) / (float)(totalVoteCount));
-		}
+			float votePercentages[4];
+			for (int i = 0; i < 4; i++) {
+				votePercentages[i] = (totalVoteCount == 0) ? 0 : ((drawVotes[i].votes) / (float)(totalVoteCount));
+			}
 
 
-		int voteWidth = 400;
-		std::string voteCountText = std::string("Vote count: ") + std::to_string(totalVoteCount);
-		DrawTextWithShadow(font, xScreen - voteWidth - 30, 40, {255, 255, 255}, {0, 0, 0, 220}, voteCountText.c_str());
+			int voteWidth = 400;
+			std::string voteCountText = std::string("Vote count: ") + std::to_string(totalVoteCount);
+			DrawTextWithShadow(font, xScreen - voteWidth - 30, 40, {255, 255, 255}, {0, 0, 0, 220}, voteCountText.c_str());
 
-		// draw actual voting screen
-		for (int i = 0; i < 4; i++) {
-			int yPos = 80 + i * (lineHeight2 + 30);
+			// draw actual voting screen
+			for (int i = 0; i < 4; i++) {
+				int yPos = 80 + i * (lineHeight2 + 30);
 
-			// animate x offset for nice slide in and slide out anim
-			float t = fmaxf(0.0, GetTime(false) - i * 0.033);
-			float t1 = fminf(fmaxf(t / 0.4, 0.0), 1.0);
-			float t2 = fminf(fmaxf((t-0.5) / 0.4, 0.0), 1.0);
-			float xOffset = fminf(pow(t1, 2.0), pow(1.0-t2, 2.0));
+				// animate x offset for nice slide in and slide out anim
+				float t = fmaxf(0.0, GetTime(false) - i * 0.033);
+				float t1 = fminf(fmaxf(t / 0.4, 0.0), 1.0);
+				float t2 = fminf(fmaxf((t - 0.5) / 0.4, 0.0), 1.0);
+				float xOffset = fminf(pow(t1, 2.0), pow(1.0 - t2, 2.0));
 
-			int xPos = xScreen - (voteWidth + 30) * (1.0 - xOffset);
+				int xPos = xScreen - (voteWidth + 30) * (1.0 - xOffset);
 
-			bool isSelected = selectedEffect == drawVotes[i].effect;
-			bool shouldHighlight = !evaluatedVoting || isSelected;
-			surface->DrawRect({64, 64, 64}, xPos, yPos, xPos + voteWidth, yPos + lineHeight2 + 14);
-			surface->DrawRect(
-				shouldHighlight ? Color(0, 111, 222) : Color(111, 111, 111), 
-				xPos, yPos, xPos + voteWidth * (isSelected ? 1.0 : votePercentages[i]), yPos + lineHeight2 + 14
-			);
+				bool isSelected = selectedEffect == drawVotes[i].effect;
+				bool shouldHighlight = !evaluatedVoting || isSelected;
+				surface->DrawRect({64, 64, 64}, xPos, yPos, xPos + voteWidth, yPos + lineHeight2 + 14);
+				surface->DrawRect(
+					shouldHighlight ? Color(0, 111, 222) : Color(111, 111, 111),
+					xPos,
+					yPos,
+					xPos + voteWidth * (isSelected ? 1.0 : votePercentages[i]),
+					yPos + lineHeight2 + 14);
 
-			std::string strNum = std::to_string(drawVotes[i].voteNumber) + ".";
-			std::string strName = (i == 3) ? "Random Effect" : drawVotes[i].effect->displayName;
-			std::string strPercentage = std::to_string((int)roundf(votePercentages[i] * 100.0f)) + std::string("%%");
+				std::string strNum = std::to_string(drawVotes[i].voteNumber) + ".";
+				std::string strName = (i == 3) ? "Random Effect" : drawVotes[i].effect->displayName;
+				std::string strPercentage = std::to_string((int)roundf(votePercentages[i] * 100.0f)) + std::string("%%");
 
-			int nameWidth = surface->GetFontLength(font2, strName.c_str());
-			int percWidth = surface->GetFontLength(font2, strPercentage.c_str());
+				int nameWidth = surface->GetFontLength(font2, strName.c_str());
+				int percWidth = surface->GetFontLength(font2, strPercentage.c_str());
 
-			strPercentage += std::string("%%"); // DrawTxt uses double printf but GetFontLength doesn't
+				strPercentage += std::string("%%");  // DrawTxt uses double printf but GetFontLength doesn't
 
-			DrawTextWithShadow(font2, xPos + 10, yPos+7, {255, 255, 255}, {0, 0, 0, 220}, strNum.c_str());
-			DrawTextWithShadow(font2, xPos + (voteWidth - nameWidth) * 0.5, yPos+7, {255, 255, 255}, {0, 0, 0, 220}, strName.c_str());
-			DrawTextWithShadow(font2, xPos + voteWidth - percWidth - 10, yPos+7, {255, 255, 255}, {0, 0, 0, 220}, strPercentage.c_str());
+				DrawTextWithShadow(font2, xPos + 10, yPos + 7, {255, 255, 255}, {0, 0, 0, 220}, strNum.c_str());
+				DrawTextWithShadow(font2, xPos + (voteWidth - nameWidth) * 0.5, yPos + 7, {255, 255, 255}, {0, 0, 0, 220}, strName.c_str());
+				DrawTextWithShadow(font2, xPos + voteWidth - percWidth - 10, yPos + 7, {255, 255, 255}, {0, 0, 0, 220}, strPercentage.c_str());
+			}
 		}
 	}
+	
 
 
 	// effects are using their own timer for animation, which isn't really smooth.
@@ -504,7 +512,8 @@ void KrzyMod::Paint(int slot) {
 		int textWidth = surface->GetFontLength(font, displayName);
 		//x pos is adjusted at the beginning for slide-in anim
 		int textX = xScreen - (30 + textWidth) * sin(fminf(eff.time + dt, 1.0) * M_PI * 0.5);
-		int textY = 100 + 4*(lineHeight2 + 30) + fontPos * (lineHeight + 30);
+		int textY = 100 + fontPos * (lineHeight + 30);
+		if (krzymod_vote_enabled.GetInt() == 1) textY += 4 * (lineHeight2 + 30);
 
 		// for slowly disappearing near the end
 		float alpha = fmaxf(fminf(eff.duration - (eff.time + dt), 1.0), 0.0f);
@@ -599,6 +608,7 @@ CON_COMMAND(krzymod_list, "krzymod_list - shows a list of all effects") {
 	for (KrzyModEffect *effect : krzyMod.effects) {
 		// putting it into the set first to have it ordered alphabetically
 		nameList.insert(effect->name); 
+		console->Print("|%s|%s||%f|\n", effect->name.c_str(), effect->displayName.c_str(), effect->durationMultiplier);
 	}
 	console->Print("KrzyMod currently has %d effects:\n", nameList.size());
 	for (std::string name : nameList) {
