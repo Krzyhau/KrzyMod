@@ -12,6 +12,7 @@
 #include "Offsets/Offsets.hpp"
 #include "Utils.hpp"
 #include "Variable.hpp"
+#include "PluginMain.hpp"
 
 #include <cmath>
 #include <cstdint>

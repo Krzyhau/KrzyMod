@@ -11,6 +11,7 @@
 #include "Offsets/Offsets.hpp"
 #include "Server.hpp"
 #include "Utils.hpp"
+#include "PluginMain.hpp"
 
 #include <cstdarg>
 #include <cstdint>
