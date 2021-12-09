@@ -12,7 +12,7 @@ public:
 		: func(nullptr)
 		, hook((void *)hook)
 		, enabled(false) {
-		Hook::hooks.push_back(this);
+		Hook::GetHooks().push_back(this);
 	}
 
 	~Hook() {}
