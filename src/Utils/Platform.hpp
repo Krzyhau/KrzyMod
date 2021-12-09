@@ -76,7 +76,7 @@ namespace {
 #else
 #	define MODULE_EXTENSION ".so"
 // clang-format off
-#define GAME_PATH(x) _GAME_PATH(Games/Linux/x.hpp)
+#define GAME_PATH(x) _GAME_PATH(Offsets/Linux/x.hpp)
 // clang-format on
 #	define __rescall __attribute__((__cdecl__))
 #	define __cdecl __attribute__((__cdecl__))
