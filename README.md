@@ -14,7 +14,7 @@ You can find a list of all effects available in the mod [here](doc/list.md).
 The mod also includes *Twitch support*, allowing your viewers to vote for one of four random effects.
 
 ## Installation
-To use the plugin, install it by downloading the newest release from [releases tab](https://github.com/Krzyhau/KrzyMod/). Then, copy a `.dll` library (or `.so` library if you're on Linux) into the main Portal 2 directory where the game's executable is located (usually it's `Steam/steamapps/common/Portal 2`). Once a library is in there, you can open up the game and type `plugin_load krzymod` in a console.
+To use the plugin, install it by downloading the library from the newest release in [releases tab](https://github.com/Krzyhau/KrzyMod/). Then, move a `.dll` library (or `.so` library if you're on Linux) into the main Portal 2 directory where the game's executable is located (usually it's `Steam/steamapps/common/Portal 2`). Once a library is in there, you can open up the game and type `plugin_load krzymod` in a console.
 
 It should be noted that SourceAutoRecord doesn't cooperate well with plugins being loaded after SAR has been loaded, therefore make sure to load KrzyMod **before** SAR is loaded.
 

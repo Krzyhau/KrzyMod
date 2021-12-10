@@ -608,7 +608,7 @@ CON_COMMAND(krzymod_list, "krzymod_list - shows a list of all effects") {
 	for (KrzyModEffect *effect : krzyMod.effects) {
 		// putting it into the set first to have it ordered alphabetically
 		nameList.insert(effect->name); 
-		console->Print("|%s|%s||%f|\n", effect->name.c_str(), effect->displayName.c_str(), effect->durationMultiplier);
+		// console->Print("|%s|%s||%f|\n", effect->name.c_str(), effect->displayName.c_str(), effect->durationMultiplier);
 	}
 	console->Print("KrzyMod currently has %d effects:\n", nameList.size());
 	for (std::string name : nameList) {
