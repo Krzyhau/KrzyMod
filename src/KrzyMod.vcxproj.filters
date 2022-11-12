@@ -349,6 +349,12 @@
     <ClCompile Include="Features\Modifiers\VisualSnapchatMode.cpp">
       <Filter>KrzyMod\Features\Modifiers</Filter>
     </ClCompile>
+    <ClCompile Include="Features\ConvarController.cpp">
+      <Filter>KrzyMod\Features</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\KrzyModEffect.cpp">
+      <Filter>KrzyMod\Features</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\minhook\buffer.h">
@@ -506,6 +512,12 @@
     </ClInclude>
     <ClInclude Include="Offsets\Linux\ApertureTag.hpp">
       <Filter>KrzyMod\Offsets\Linux</Filter>
+    </ClInclude>
+    <ClInclude Include="Features\ConvarController.hpp">
+      <Filter>KrzyMod\Features</Filter>
+    </ClInclude>
+    <ClInclude Include="Features\KrzyModEffect.hpp">
+      <Filter>KrzyMod\Features</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

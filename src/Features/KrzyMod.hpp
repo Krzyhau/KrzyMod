@@ -1,62 +1,13 @@
 #pragma once
 
 #include "Variable.hpp"
+#include "KrzyModEffect.hpp"
+#include "ConvarController.hpp"
 #include "Modules/VGui.hpp"
 #include <list>
 #include <chrono>
 #include "Utils/TwitchConnection.hpp"
 
-enum KrzyModExecType {
-	UNKNOWN,
-	INITIAL,
-	ENGINE_TICK,
-	PROCESS_MOVEMENT,
-	OVERRIDE_CAMERA,
-	HUD_PAINT,
-	LAST,
-	TRACERAY
-};
-
-struct KrzyModExecInfo {
-	KrzyModExecType execType;
-	bool preCall;
-	float time;
-	float endTime;
-	void* data;
-};
-
-
-class KrzyModEffect {
-public:
-	KrzyModEffect(std::string name, std::string displayName, float executeTime, int groupID, void (*function)(KrzyModExecInfo info));
-
-public:
-	std::string name;
-	std::string displayName;
-	float durationMultiplier;
-	int groupID;
-	//modifiers can have different function types depending on the type, trusting the type variable
-	void (*function)(KrzyModExecInfo info);
-};
-
-struct KrzyModActiveEffect {
-	KrzyModEffect *effect;
-	float time;
-	float duration;
-	void Update(float dt);
-	void Execute(KrzyModExecType type, bool preCall, void* data);
-};
-
-struct KrzyModConvarControl {
-	Variable convar;
-	std::string value;
-	std::string originalValue;
-	bool isArchiveBlocked;
-	float remainingTime;
-	KrzyModEffect *parentEffect;
-	KrzyModConvarControl(Variable var, std::string value, float time, KrzyModEffect *parent);
-	void Update(float dt);
-};
 
 struct KrzyModVote {
 	int voteNumber = 0;
@@ -69,7 +20,7 @@ class KrzyMod : public Hud {
 private:
 	int nextEffectID = -1;
 	KrzyModEffect *selectedEffect = nullptr;
-	std::list<KrzyModConvarControl> convarControllers;
+	std::list<ConvarController> convarControllers;
 
 	std::chrono::high_resolution_clock::time_point startTime;
 	std::chrono::high_resolution_clock::time_point startTimeModified;

@@ -31,45 +31,6 @@ Variable krzymod_vote_double_numbering("krzymod_vote_double_numbering", "0", "Us
 Variable krzymod_vote_channel("krzymod_vote_channel", "krzyhau", "Sets a twitch channel from which votes should be read.\n", 0);
 Variable krzymod_vote_proportional("krzymod_vote_proportional", "1", 0, 1, "Should KrzyMod use proportional voting? (x% means effect has x% to be activated).\n", 0);
 
-KrzyModEffect::KrzyModEffect(std::string name, std::string displayName, float durationMultiplier, int groupID, void (*function)(KrzyModExecInfo info))
-	: name(name)
-	, displayName(displayName)
-	, durationMultiplier(durationMultiplier)
-	, groupID(groupID)
-	, function(function) {
-	krzyMod.AddEffect(this);
-}
-
-void KrzyModActiveEffect::Update(float dt) {
-	time += dt;
-	if (time > duration) Execute(LAST, true, effect);
-}
-
-void KrzyModActiveEffect::Execute(KrzyModExecType type, bool preCall, void *data = nullptr) {
-	((void (*)(KrzyModExecInfo))effect->function)({type, preCall, time, duration, data});
-}
-
-KrzyModConvarControl::KrzyModConvarControl(Variable var, std::string value, float time, KrzyModEffect *parent)
-	: convar(var), value(value), remainingTime(time), parentEffect(parent){
-	originalValue = var.GetString();
-	isArchiveBlocked = var.GetFlags() & FCVAR_ARCHIVE;
-}
-
-void KrzyModConvarControl::Update(float dt) {
-	remainingTime -= dt;
-
-	if (remainingTime <= 0) {
-		remainingTime = 0;
-		convar.SetValue(originalValue.c_str());
-		if (isArchiveBlocked) convar.AddFlag(FCVAR_ARCHIVE);
-	} else if (strcmp(convar.GetString(),value.c_str()) != 0) {
-		convar.RemoveFlag(FCVAR_ARCHIVE);
-		convar.SetValue(value.c_str());
-	}
-}
-
-
-
 
 KrzyMod::KrzyMod()
 	: Hud(HudType_InGame | HudType_Paused, true) {
@@ -167,19 +128,20 @@ void KrzyMod::Update() {
 	});
 
 	// update cvar controllers
-	for (KrzyModConvarControl &control : convarControllers) {
+	for (ConvarController &control : convarControllers) {
+		control.Control();
+
 		bool hasActiveMod = false;
 		for (KrzyModActiveEffect &eff : activeEffects) {
-			if (eff.effect == control.parentEffect) {
+			if (control.IsActivator(eff.effect)) {
 				hasActiveMod = true;
 				break;
 			}
 		}
-		if (!hasActiveMod) control.remainingTime = 0;
-		control.Update(deltaTime);
+		if (!hasActiveMod) control.Disable();
 	}
-	convarControllers.remove_if([](const KrzyModConvarControl &con) -> bool {
-		return con.remainingTime <= 0;
+	convarControllers.remove_if([](const ConvarController &con) -> bool {
+		return !con.IsEnabled();
 	});
 
 	// resetting timer and activating most voted effect
@@ -277,9 +239,8 @@ void KrzyMod::Update() {
 
 void KrzyMod::Stop() {
 	if (convarControllers.size() > 0) {
-		for (KrzyModConvarControl &control : convarControllers) {
-			control.remainingTime = 0;
-			control.Update(0);
+		for (ConvarController &control : convarControllers) {
+			control.Disable();
 		}
 		convarControllers.clear();
 	}
@@ -377,15 +338,14 @@ bool KrzyMod::Vote(int num) {
 
 // adds convar controller
 void KrzyMod::AddConvarController(Variable convar, std::string newValue, float time, KrzyModEffect* parent) {
-	for (KrzyModConvarControl &control : convarControllers) {
-		if (control.convar.ThisPtr() == convar.ThisPtr()) {
-			control.value = newValue;
-			control.remainingTime = time;
-			control.parentEffect = parent;
+	for (ConvarController &control : convarControllers) {
+		if (control.Convar().ThisPtr() == convar.ThisPtr() && !control.IsActivator(parent)) {
+			// there's already an active controller contrilling this cvar, update it.
+			control.AddActivator(parent);
 			return;
 		}
 	}
-	convarControllers.push_back(KrzyModConvarControl(convar, newValue, time, parent));
+	convarControllers.push_back(ConvarController(convar, newValue, time, parent));
 	//console->Print("Convar controller for cvar %s=%f added for %fs.\n", convar.ThisPtr()->m_pszName, newValue, time);
 }
 
