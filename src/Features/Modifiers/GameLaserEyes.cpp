@@ -1,7 +1,7 @@
 #include "Features/KrzyMod.hpp"
 #include "Modules/Client.hpp"
 #include "Modules/Engine.hpp"
-#include "Modules/Vscript.hpp"
+#include "Modules/VScript.hpp"
 
 CREATE_KRZYMOD(gameLaserEyes, "Laser Eyes", 2.5f, 0) {
 	if (info.execType == INITIAL) {
