@@ -139,6 +139,216 @@
     <ClCompile Include="Offsets\Linux\Portal2.cpp">
       <Filter>KrzyMod\Offsets\Linux</Filter>
     </ClCompile>
+    <ClCompile Include="Features\Modifiers\MoveWStuck.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameButterfingers.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameChangePortalgunLinkage.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameCloseSesame.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameGivePercent.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameIgniteAll.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameLargePhysscale.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameLargeTimescale.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameLaserEyes.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameLeastPortals.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameLoadAutosave.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameLoadQuick.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameMaxBounciness.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameMoonGravity.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameNegativeFriction.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameNoFriction.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameOnlyWallsPortalable.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameOpenSesame.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GamePortalMachineGun.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GamePressButtons.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameReleaseButtons.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameRemovePaint.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameRestartLevel.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameReversePortalSurfaces.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameSmallPhysscale.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameSmallTimescale.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameSpaceCoreOrbit.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameSpawnCompanionCube.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameSpawnGelJump.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameSpawnGelPortal.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameSpawnGelSpeed.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameSpawnGelWater.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\GameSpawnTurret.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\MetaFasterDelay.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\MetaPause.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\MoveAirlock.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\MoveAlwaysDuck.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\MoveAutojump.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\MoveDelayInput.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\MoveDrunk.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\MoveFallDamage.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\MoveInverseControl.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\MoveMarioJump.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\MoveStanleyParable.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\MoveStickyGround.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\MoveSuperhot.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\PlayerKill.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\PlayerLaunchRandom.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\PlayerLaunchUp.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\PlayerUTurn.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\ViewBarrelRoll.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\ViewGTA2.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\ViewQuakeFov.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\ViewUpsideDown.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\ViewZoomFov.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\VisualBlackout.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\VisualClaustrophobia.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\VisualDeepFried.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\VisualDVDLogo.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\VisualGrid.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\VisualHideCrosshair.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\VisualHideDynamic.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\VisualHideStatic.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\VisualLoudNoise.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\VisualOrtho.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\VisualPaintItWhite.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\VisualPS2Graphics.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\VisualRainbowwPropss.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\VisualRTXOn.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
+    <ClCompile Include="Features\Modifiers\VisualSnapchatMode.cpp">
+      <Filter>KrzyMod\Features\Modifiers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\minhook\buffer.h">
@@ -325,6 +535,9 @@
     </Filter>
     <Filter Include="KrzyMod\Offsets\Linux">
       <UniqueIdentifier>{5e8e3eca-807e-4e32-bd8d-046f8be99381}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KrzyMod\Features\Modifiers">
+      <UniqueIdentifier>{6b093324-3943-49e3-9f56-4e63eec715b2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
