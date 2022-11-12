@@ -9,17 +9,12 @@
 #include <algorithm>
 #include <cstring>
 
-EntityList *entityList;
-
-EntityList::EntityList() {
-	this->hasLoaded = true;
-}
 CEntInfo *EntityList::GetEntityInfoByIndex(int index) {
 	return reinterpret_cast<CEntInfo *>((uintptr_t)server->m_EntPtrArray + sizeof(CEntInfo) * index);
 }
 CEntInfo *EntityList::GetEntityInfoByName(const char *name) {
 	for (auto index = 0; index < Offsets::NUM_ENT_ENTRIES; ++index) {
-		auto info = this->GetEntityInfoByIndex(index);
+		auto info = EntityList::GetEntityInfoByIndex(index);
 		if (info->m_pEntity == nullptr) {
 			continue;
 		}
@@ -36,7 +31,7 @@ CEntInfo *EntityList::GetEntityInfoByName(const char *name) {
 }
 CEntInfo *EntityList::GetEntityInfoByClassName(const char *name) {
 	for (auto index = 0; index < Offsets::NUM_ENT_ENTRIES; ++index) {
-		auto info = this->GetEntityInfoByIndex(index);
+		auto info = EntityList::GetEntityInfoByIndex(index);
 		if (info->m_pEntity == nullptr) {
 			continue;
 		}
@@ -55,7 +50,7 @@ IHandleEntity *EntityList::LookupEntity(const CBaseHandle &handle) {
 	if (handle.m_Index == Offsets::INVALID_EHANDLE_INDEX)
 		return NULL;
 
-	auto pInfo = this->GetEntityInfoByIndex(handle.GetEntryIndex());
+	auto pInfo = EntityList::GetEntityInfoByIndex(handle.GetEntryIndex());
 
 	if (pInfo->m_SerialNumber == handle.GetSerialNumber())
 		return (IHandleEntity *)pInfo->m_pEntity;

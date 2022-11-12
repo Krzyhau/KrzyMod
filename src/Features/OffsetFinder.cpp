@@ -8,16 +8,11 @@
 
 #include <cstring>
 
-OffsetFinder *offsetFinder;
-
-OffsetFinder::OffsetFinder() {
-	this->hasLoaded = true;
-}
 void OffsetFinder::ServerSide(const char *className, const char *propName, int *offset) {
 	if (server->GetAllServerClasses) {
 		for (auto curClass = server->GetAllServerClasses(); curClass; curClass = curClass->m_pNext) {
 			if (!std::strcmp(curClass->m_pNetworkName, className)) {
-				auto result = this->Find(curClass->m_pTable, propName);
+				auto result = OffsetFinder::Find(curClass->m_pTable, propName);
 				if (result != 0) {
 					console->DevMsg("Found %s::%s at %i (server-side)\n", className, propName, result);
 					if (offset)
@@ -36,7 +31,7 @@ void OffsetFinder::ClientSide(const char *className, const char *propName, int *
 	if (client->GetAllClasses) {
 		for (auto curClass = client->GetAllClasses(); curClass; curClass = curClass->m_pNext) {
 			if (!std::strcmp(curClass->m_pNetworkName, className)) {
-				auto result = this->Find(curClass->m_pRecvTable, propName);
+				auto result = OffsetFinder::Find(curClass->m_pRecvTable, propName);
 				if (result != 0) {
 					console->DevMsg("Found %s::%s at %i (client-side)\n", className, propName, result);
 					if (offset)
@@ -68,7 +63,7 @@ int16_t OffsetFinder::Find(SendTable *table, const char *propName) {
 			continue;
 		}
 
-		if (auto nextOffset = this->Find(nextTable, propName)) {
+		if (auto nextOffset = OffsetFinder::Find(nextTable, propName)) {
 			return offset + nextOffset;
 		}
 	}
@@ -92,7 +87,7 @@ int16_t OffsetFinder::Find(RecvTable *table, const char *propName) {
 			continue;
 		}
 
-		if (auto nextOffset = this->Find(nextTable, propName)) {
+		if (auto nextOffset = OffsetFinder::Find(nextTable, propName)) {
 			return offset + nextOffset;
 		}
 	}

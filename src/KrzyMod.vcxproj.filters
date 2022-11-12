@@ -49,9 +49,6 @@
     <ClCompile Include="Modules\VGui.cpp">
       <Filter>KrzyMod\Modules</Filter>
     </ClCompile>
-    <ClCompile Include="Features\Feature.cpp">
-      <Filter>KrzyMod\Features</Filter>
-    </ClCompile>
     <ClCompile Include="Cheats.cpp">
       <Filter>KrzyMod</Filter>
     </ClCompile>
@@ -209,9 +206,6 @@
     </ClInclude>
     <ClInclude Include="Modules\VGui.hpp">
       <Filter>KrzyMod\Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="Features\Feature.hpp">
-      <Filter>KrzyMod\Features</Filter>
     </ClInclude>
     <ClInclude Include="Cheats.hpp">
       <Filter>KrzyMod</Filter>

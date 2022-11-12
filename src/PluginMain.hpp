@@ -1,7 +1,6 @@
 #pragma once
 #include "Cheats.hpp"
 #include "Command.hpp"
-#include "Features/Feature.hpp"
 #include "Game.hpp"
 #include "Interface.hpp"
 #include "Modules/Console.hpp"
@@ -38,7 +37,6 @@ public:
 class PluginMain : public IServerPluginCallbacks {
 public:
 	Modules *modules;
-	Features *features;
 	Cheats *cheats;
 	Plugin *plugin;
 	Game *game;

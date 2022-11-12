@@ -198,29 +198,29 @@ bool Server::Init() {
 		this->g_ServerGameDLL->Hook(Server::GameFrame_Hook, Server::GameFrame, Offsets::GameFrame);
 	}
 
-	offsetFinder->ServerSide("CBasePlayer", "m_nWaterLevel", &Offsets::m_nWaterLevel);
-	offsetFinder->ServerSide("CBasePlayer", "m_iName", &Offsets::m_iName);
-	offsetFinder->ServerSide("CBasePlayer", "m_vecVelocity[0]", &Offsets::S_m_vecVelocity);
-	offsetFinder->ServerSide("CBasePlayer", "m_fFlags", &Offsets::m_fFlags);
-	offsetFinder->ServerSide("CBasePlayer", "m_flMaxspeed", &Offsets::m_flMaxspeed);
-	offsetFinder->ServerSide("CBasePlayer", "m_vecViewOffset[0]", &Offsets::S_m_vecViewOffset);
-	offsetFinder->ServerSide("CBasePlayer", "m_hGroundEntity", &Offsets::S_m_hGroundEntity);
-	offsetFinder->ServerSide("CBasePlayer", "m_bDucked", &Offsets::m_bDucked);
-	offsetFinder->ServerSide("CBasePlayer", "m_flFriction", &Offsets::m_flFriction);
-	offsetFinder->ServerSide("CBasePlayer", "m_nTickBase", &Offsets::m_nTickBase);
-	offsetFinder->ServerSide("CPortal_Player", "m_hUseEntity", &Offsets::m_hUseEntity);
-	offsetFinder->ServerSide("CPortal_Player", "m_InAirState", &Offsets::m_InAirState);
-	offsetFinder->ServerSide("CPortal_Player", "m_StatsThisLevel", &Offsets::S_m_StatsThisLevel);
+	OffsetFinder::ServerSide("CBasePlayer", "m_nWaterLevel", &Offsets::m_nWaterLevel);
+	OffsetFinder::ServerSide("CBasePlayer", "m_iName", &Offsets::m_iName);
+	OffsetFinder::ServerSide("CBasePlayer", "m_vecVelocity[0]", &Offsets::S_m_vecVelocity);
+	OffsetFinder::ServerSide("CBasePlayer", "m_fFlags", &Offsets::m_fFlags);
+	OffsetFinder::ServerSide("CBasePlayer", "m_flMaxspeed", &Offsets::m_flMaxspeed);
+	OffsetFinder::ServerSide("CBasePlayer", "m_vecViewOffset[0]", &Offsets::S_m_vecViewOffset);
+	OffsetFinder::ServerSide("CBasePlayer", "m_hGroundEntity", &Offsets::S_m_hGroundEntity);
+	OffsetFinder::ServerSide("CBasePlayer", "m_bDucked", &Offsets::m_bDucked);
+	OffsetFinder::ServerSide("CBasePlayer", "m_flFriction", &Offsets::m_flFriction);
+	OffsetFinder::ServerSide("CBasePlayer", "m_nTickBase", &Offsets::m_nTickBase);
+	OffsetFinder::ServerSide("CPortal_Player", "m_hUseEntity", &Offsets::m_hUseEntity);
+	OffsetFinder::ServerSide("CPortal_Player", "m_InAirState", &Offsets::m_InAirState);
+	OffsetFinder::ServerSide("CPortal_Player", "m_StatsThisLevel", &Offsets::S_m_StatsThisLevel);
 
-	offsetFinder->ServerSide("CPortal_Player", "iNumPortalsPlaced", &Offsets::iNumPortalsPlaced);
-	offsetFinder->ServerSide("CPortal_Player", "m_hActiveWeapon", &Offsets::m_hActiveWeapon);
-	offsetFinder->ServerSide("CProp_Portal", "m_bActivated", &Offsets::m_bActivated);
-	offsetFinder->ServerSide("CProp_Portal", "m_bIsPortal2", &Offsets::m_bIsPortal2);
-	offsetFinder->ServerSide("CWeaponPortalgun", "m_bCanFirePortal1", &Offsets::m_bCanFirePortal1);
-	offsetFinder->ServerSide("CWeaponPortalgun", "m_bCanFirePortal2", &Offsets::m_bCanFirePortal2);
-	offsetFinder->ServerSide("CWeaponPortalgun", "m_hPrimaryPortal", &Offsets::m_hPrimaryPortal);
-	offsetFinder->ServerSide("CWeaponPortalgun", "m_hSecondaryPortal", &Offsets::m_hSecondaryPortal);
-	offsetFinder->ServerSide("CWeaponPortalgun", "m_iPortalLinkageGroupID", &Offsets::m_iPortalLinkageGroupID);
+	OffsetFinder::ServerSide("CPortal_Player", "iNumPortalsPlaced", &Offsets::iNumPortalsPlaced);
+	OffsetFinder::ServerSide("CPortal_Player", "m_hActiveWeapon", &Offsets::m_hActiveWeapon);
+	OffsetFinder::ServerSide("CProp_Portal", "m_bActivated", &Offsets::m_bActivated);
+	OffsetFinder::ServerSide("CProp_Portal", "m_bIsPortal2", &Offsets::m_bIsPortal2);
+	OffsetFinder::ServerSide("CWeaponPortalgun", "m_bCanFirePortal1", &Offsets::m_bCanFirePortal1);
+	OffsetFinder::ServerSide("CWeaponPortalgun", "m_bCanFirePortal2", &Offsets::m_bCanFirePortal2);
+	OffsetFinder::ServerSide("CWeaponPortalgun", "m_hPrimaryPortal", &Offsets::m_hPrimaryPortal);
+	OffsetFinder::ServerSide("CWeaponPortalgun", "m_hSecondaryPortal", &Offsets::m_hSecondaryPortal);
+	OffsetFinder::ServerSide("CWeaponPortalgun", "m_iPortalLinkageGroupID", &Offsets::m_iPortalLinkageGroupID);
 
 	sv_cheats = Variable("sv_cheats");
 	sv_footsteps = Variable("sv_footsteps");

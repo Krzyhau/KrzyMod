@@ -33,7 +33,6 @@ EXPOSE_SINGLE_INTERFACE_GLOBALVAR(PluginMain, IServerPluginCallbacks, INTERFACEV
 
 PluginMain::PluginMain()
 	: modules(new Modules())
-	, features(new Features())
 	, cheats(new Cheats())
 	, plugin(new Plugin())
 	, game(Game::CreateNew()) {
@@ -53,9 +52,6 @@ bool PluginMain::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn game
 
 		tier1 = new Tier1();
 		if (tier1->Init()) {
-			this->features->AddFeature<EntityList>(&entityList);
-			this->features->AddFeature<OffsetFinder>(&offsetFinder);
-
 			this->modules->AddModule<InputSystem>(&inputSystem);
 			this->modules->AddModule<Scheme>(&scheme);
 			this->modules->AddModule<Surface>(&surface);
@@ -89,16 +85,12 @@ bool PluginMain::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn game
 	if (pluginMain.cheats) {
 		pluginMain.cheats->Shutdown();
 	}
-	if (pluginMain.features) {
-		pluginMain.features->DeleteAll();
-	}
 
 	if (pluginMain.modules) {
 		pluginMain.modules->ShutdownAll();
 	}
 
 	Variable::ClearAllCallbacks();
-	SAFE_DELETE(pluginMain.features)
 	SAFE_DELETE(pluginMain.cheats)
 	SAFE_DELETE(pluginMain.modules)
 	SAFE_DELETE(pluginMain.plugin)
@@ -157,9 +149,6 @@ CON_COMMAND(krzymod_exit, "krzymod_exit - removes all function hooks, registered
 	if (pluginMain.cheats) {
 		pluginMain.cheats->Shutdown();
 	}
-	if (pluginMain.features) {
-		pluginMain.features->DeleteAll();
-	}
 
 	if (pluginMain.GetPlugin()) {
 		// Plugin has to unhook CEngine some ticks before unloading the module
@@ -171,7 +160,6 @@ CON_COMMAND(krzymod_exit, "krzymod_exit - removes all function hooks, registered
 		pluginMain.modules->ShutdownAll();
 	}
 
-	SAFE_DELETE(pluginMain.features)
 	SAFE_DELETE(pluginMain.cheats)
 	SAFE_DELETE(pluginMain.modules)
 	SAFE_DELETE(pluginMain.plugin)

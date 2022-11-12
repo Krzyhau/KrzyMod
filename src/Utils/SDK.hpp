@@ -954,7 +954,6 @@ struct CViewSetup {
 class IHandleEntity;
 
 class CBaseHandle {
-	friend class EntityList;
 
 public:
 	inline int GetEntryIndex() const {

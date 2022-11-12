@@ -134,7 +134,6 @@
     <ClCompile Include="Command.cpp" />
     <ClCompile Include="Event.cpp" />
     <ClCompile Include="Features\EntityList.cpp" />
-    <ClCompile Include="Features\Feature.cpp" />
     <ClCompile Include="Features\KrzyMod.cpp" />
     <ClCompile Include="Features\OffsetFinder.cpp" />
     <ClCompile Include="Game.cpp" />
@@ -185,7 +184,6 @@
     <ClInclude Include="Command.hpp" />
     <ClInclude Include="Event.hpp" />
     <ClInclude Include="Features\EntityList.hpp" />
-    <ClInclude Include="Features\Feature.hpp" />
     <ClInclude Include="Features\KrzyMod.hpp" />
     <ClInclude Include="Features\OffsetFinder.hpp" />
     <ClInclude Include="Game.hpp" />
