@@ -151,6 +151,7 @@ enum class TextColor {
 
 #define FCVAR_DEVELOPMENTONLY (1 << 1)
 #define FCVAR_HIDDEN (1 << 4)
+#define FCVAR_ARCHIVE (1 << 7)
 #define FCVAR_NEVER_AS_STRING (1 << 12)
 #define FCVAR_CHEAT (1 << 14)
 #define FCVAR_DONTRECORD (1 << 17)

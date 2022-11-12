@@ -52,6 +52,7 @@ void KrzyModActiveEffect::Execute(KrzyModExecType type, bool preCall, void *data
 KrzyModConvarControl::KrzyModConvarControl(Variable var, std::string value, float time, KrzyModEffect *parent)
 	: convar(var), value(value), remainingTime(time), parentEffect(parent){
 	originalValue = var.GetString();
+	isArchiveBlocked = var.GetFlags() & FCVAR_ARCHIVE;
 }
 
 void KrzyModConvarControl::Update(float dt) {
@@ -60,7 +61,9 @@ void KrzyModConvarControl::Update(float dt) {
 	if (remainingTime <= 0) {
 		remainingTime = 0;
 		convar.SetValue(originalValue.c_str());
+		if (isArchiveBlocked) convar.AddFlag(FCVAR_ARCHIVE);
 	} else if (strcmp(convar.GetString(),value.c_str()) != 0) {
+		convar.RemoveFlag(FCVAR_ARCHIVE);
 		convar.SetValue(value.c_str());
 	}
 }

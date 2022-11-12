@@ -51,6 +51,7 @@ struct KrzyModConvarControl {
 	Variable convar;
 	std::string value;
 	std::string originalValue;
+	bool isArchiveBlocked;
 	float remainingTime;
 	KrzyModEffect *parentEffect;
 	KrzyModConvarControl(Variable var, std::string value, float time, KrzyModEffect *parent);
