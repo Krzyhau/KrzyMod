@@ -1,5 +1,6 @@
 #include "ConvarController.hpp"
 #include "Modules/Console.hpp"
+#include <string>
 
 ConvarController::ConvarController(Variable var, std::string value, float time, KrzyModEffect *activator)
 	: convar(var)
