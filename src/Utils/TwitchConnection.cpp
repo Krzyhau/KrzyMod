@@ -1,5 +1,7 @@
 #include "TwitchConnection.hpp"
 
+#include <cstring>
+
 TwitchConnection::TwitchConnection() 
  : NetworkConnection("irc.chat.twitch.tv", 6667) {
 
