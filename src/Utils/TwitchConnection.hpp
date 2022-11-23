@@ -1,9 +1,7 @@
-#include <string>
-#include <vector>
-#include <thread>
+#include "NetworkConnection.hpp"
 
 #pragma once
-class TwitchConnection{
+class TwitchConnection : protected NetworkConnection{
 public:
 	struct Message{
 		std::string username;
@@ -11,18 +9,16 @@ public:
 	};
 private:
 	std::string channel;
-	int socketID;
-	char sockbuff[4096];
-	bool active = false;
-	bool reading = false;
-	std::thread connThread;
-	std::vector<Message> messageBuffer;
+
 public:
-	bool Connect();
-	bool IsActive();
-	void Disconnect();
-	void SetChannel(std::string name);
+	TwitchConnection();
+	void JoinChannel(std::string name);
 	std::string GetChannel() { return channel; }
-	std::vector<Message> GetNewMessages();
+	std::vector<Message> FetchNewMessages();
+
+	using NetworkConnection::Connect;
+	using NetworkConnection::Disconnect;
+	using NetworkConnection::IsConnected;
+	using NetworkConnection::SendData;
 };
 

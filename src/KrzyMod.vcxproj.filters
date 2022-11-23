@@ -355,6 +355,12 @@
     <ClCompile Include="Features\KrzyModEffect.cpp">
       <Filter>KrzyMod\Features</Filter>
     </ClCompile>
+    <ClCompile Include="Features\KrzyModClient.cpp">
+      <Filter>KrzyMod\Features</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\NetworkConnection.cpp">
+      <Filter>KrzyMod\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\minhook\buffer.h">
@@ -518,6 +524,12 @@
     </ClInclude>
     <ClInclude Include="Features\KrzyModEffect.hpp">
       <Filter>KrzyMod\Features</Filter>
+    </ClInclude>
+    <ClInclude Include="Features\KrzyModClient.hpp">
+      <Filter>KrzyMod\Features</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\NetworkConnection.hpp">
+      <Filter>KrzyMod\Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

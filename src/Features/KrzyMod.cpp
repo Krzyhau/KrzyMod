@@ -26,7 +26,7 @@ Variable krzymod_timer_multiplier("krzymod_timer_multiplier", "1", 0, "Multiplie
 Variable krzymod_primary_font("krzymod_primary_font", "92", 0, "Change font of KrzyMod.\n");
 Variable krzymod_secondary_font("krzymod_secondary_font", "97", 0, "Change font of KrzyMod.\n");
 Variable krzymod_debug("krzymod_debug", "0", "Debugs KrzyMod.\n");
-Variable krzymod_vote_enabled("krzymod_vote_enabled", "1", 0,2, "Enables Twitch chat voting for KrzyMod effects.\n");
+Variable krzymod_vote_enabled("krzymod_vote_enabled", "0", 0, 2, "Enables Twitch chat voting for KrzyMod effects.\n");
 Variable krzymod_vote_double_numbering("krzymod_vote_double_numbering", "0", "Uses different numbers for every voting in KrzyMod\n");
 Variable krzymod_vote_channel("krzymod_vote_channel", "krzyhau", "Sets a twitch channel from which votes should be read.\n", 0);
 Variable krzymod_vote_proportional("krzymod_vote_proportional", "1", 0, 1, "Should KrzyMod use proportional voting? (x% means effect has x% to be activated).\n", 0);
@@ -67,16 +67,17 @@ void KrzyMod::Update() {
 	}
 	
 	else {
-
-		if (krzymod_vote_enabled.GetBool()) {
+		std::string channel = krzymod_vote_channel.GetString();
+		if (krzymod_vote_enabled.GetBool() && channel.length() > 0) {
 			//update twitch connection accordingly
 			if (twitchCon.GetChannel().compare(krzymod_vote_channel.GetString()) != 0) {
-				twitchCon.SetChannel(krzymod_vote_channel.GetString());
+				twitchCon.JoinChannel(krzymod_vote_channel.GetString());
 			}
-			if (!twitchCon.IsActive()) {
-				twitchCon.SetChannel(krzymod_vote_channel.GetString());
-				twitchCon.Connect();
+			if (!twitchCon.IsConnected()) {
+				twitchCon.JoinChannel(krzymod_vote_channel.GetString());
 			}
+		} else if (twitchCon.IsConnected()) {
+			twitchCon.Disconnect();	
 		}
 		// we always want sv_cheats to be enabled when krzymod is enabled. no questions.
 		if (!sv_cheats.GetBool()) sv_cheats.SetValue(true);
@@ -225,8 +226,9 @@ void KrzyMod::Update() {
 	}
 
 	// getting new votes from Twitch chat
-	auto twitchMsgs = twitchCon.GetNewMessages();
+	auto twitchMsgs = twitchCon.FetchNewMessages();
 	for (auto msg : twitchMsgs) {
+		console->Print("[TWITCH] %s: %s\n", msg.username.c_str(), msg.message.c_str());
 		if (msg.message.length() > 2) continue;
 		if (std::find(votingPeople.begin(), votingPeople.end(), msg.username) == votingPeople.end()) {
 			int voteNum = std::atoi(msg.message.c_str());
@@ -250,7 +252,7 @@ void KrzyMod::Stop() {
 		}
 		activeEffects.clear();
 	}
-	if (twitchCon.IsActive()) twitchCon.Disconnect();
+	if (twitchCon.IsConnected()) twitchCon.Disconnect();
 }
 
 // returns time value of the KrzyMod
