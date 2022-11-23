@@ -26,6 +26,9 @@ Variable krzymod_timer_multiplier("krzymod_timer_multiplier", "1", 0, "Multiplie
 Variable krzymod_primary_font("krzymod_primary_font", "92", 0, "Change font of KrzyMod.\n");
 Variable krzymod_secondary_font("krzymod_secondary_font", "97", 0, "Change font of KrzyMod.\n");
 Variable krzymod_debug("krzymod_debug", "0", "Debugs KrzyMod.\n");
+Variable krzymod_ignore_pausing_locally("krzymod_ignore_pausing_as_host", "0", "Keep the mod active during pausing and loading when playing locally.\n");
+Variable krzymod_host_spectator("krzymod_host_spectator", "0", "When hosting the room, effects are not applied.\n");
+
 Variable krzymod_vote_enabled("krzymod_vote_enabled", "0", 0, 2, "Enables Twitch chat voting for KrzyMod effects.\n");
 Variable krzymod_vote_double_numbering("krzymod_vote_double_numbering", "0", "Uses different numbers for every voting in KrzyMod\n");
 Variable krzymod_vote_channel("krzymod_vote_channel", "krzyhau", "Sets a twitch channel from which votes should be read.\n", 0);
@@ -48,7 +51,11 @@ bool KrzyMod::GetCurrentSize(int &w, int &h) {
 
 
 bool KrzyMod::IsEnabled() {
-	return krzymod_enabled.GetBool() && sv_cheats.GetBool() && engine->isRunning() && !engine->IsGamePaused();
+	if (!krzymod_enabled.GetBool() || !sv_cheats.GetBool()) return false;
+
+	bool inGame = engine->isRunning() && !engine->IsGamePaused();
+
+	return inGame || krzymod_ignore_pausing_locally.GetBool() || modClient.Joined();
 }
 
 // literally every single bit of logic related to KrzyMod.
@@ -67,6 +74,13 @@ void KrzyMod::Update() {
 	}
 	
 	else {
+		// handle client
+		if (modClient.JoinedAsClient()) {
+			krzymod_time_base.SetValue(modClient.GetHostedTimeBase());
+			krzymod_vote_enabled.SetValue(false);
+		}
+
+		// handle voting
 		std::string channel = krzymod_vote_channel.GetString();
 		if (krzymod_vote_enabled.GetBool() && channel.length() > 0) {
 			//update twitch connection accordingly
@@ -144,6 +158,9 @@ void KrzyMod::Update() {
 	convarControllers.remove_if([](const ConvarController &con) -> bool {
 		return !con.IsEnabled();
 	});
+
+	// handle new votes and twitch stuff only if we're playing locally or hosting
+	if (modClient.JoinedAsClient()) return;
 
 	// resetting timer and activating most voted effect
 	if (GetTime(true) > krzymod_time_base.GetFloat()) {
@@ -228,7 +245,9 @@ void KrzyMod::Update() {
 	// getting new votes from Twitch chat
 	auto twitchMsgs = twitchCon.FetchNewMessages();
 	for (auto msg : twitchMsgs) {
-		console->Print("[TWITCH] %s: %s\n", msg.username.c_str(), msg.message.c_str());
+		if (krzymod_debug.GetBool()) {
+			console->Print("[TWITCH] %s: %s\n", msg.username.c_str(), msg.message.c_str());
+		}
 		if (msg.message.length() > 2) continue;
 		if (std::find(votingPeople.begin(), votingPeople.end(), msg.username) == votingPeople.end()) {
 			int voteNum = std::atoi(msg.message.c_str());
@@ -272,27 +291,54 @@ void KrzyMod::ResetTimer() {
 	startTime = timeNow;
 	startTimeModified = timeNow;
 	duration = krzymod_time_base.GetFloat();
+
+	if (modClient.JoinedAsHost()) {
+		modClient.SendData(Utils::ssprintf("3;%f;%f", 0, krzymod_time_base.GetFloat()));
+	}
+}
+
+void KrzyMod::UpdateTimer(float timeBase, float currTimer) {
+	krzymod_time_base.SetValue(timeBase);
+	auto timeNow = std::chrono::high_resolution_clock::now();
+	auto timespan = std::chrono::duration_cast<std::chrono::high_resolution_clock::duration>(std::chrono::duration<float>(currTimer));
+	startTime = timeNow - timespan;
+	startTimeModified = timeNow - timespan;
 }
 
 // Activating modifier by adding a new ActiveKrzyModifier into the list
 void KrzyMod::ActivateEffect(KrzyModEffect *effect) {
-	if (krzymod_debug.GetBool()) {
-		//console->Print("Activating KrzyMod effect %s. Next effect: %s\n", mod->displayName.c_str(), GetNextModifier(false)->displayName.c_str());
-	}
 	// the time is calculated based on own multiplier and base time specified by cvar
 	float durMult = effect->durationMultiplier == 0 ? 2.5f : effect->durationMultiplier; 
 	float duration = durMult * krzymod_time_base.GetFloat();
-	KrzyModActiveEffect activeEffect = {effect, 0, duration};
+	
+	ActivateEffect(effect, duration, 0);
+}
+
+void KrzyMod::ActivateEffect(KrzyModEffect* effect, float duration, float time) {
+	if (krzymod_debug.GetBool()) {
+		console->Print("Activating KrzyMod effect %s.\n", effect->displayName.c_str());
+	}
+
+	KrzyModActiveEffect activeEffect = {effect, time, duration};
 	activeEffects.push_back(activeEffect);
-	activeEffect.Execute(INITIAL, true, effect);
+
+	if (!modClient.JoinedAsHost() || !krzymod_host_spectator.GetBool()) {
+		activeEffect.Execute(INITIAL, true, effect);
+	}
+
+	if (modClient.JoinedAsHost()) {
+		modClient.SendData(Utils::ssprintf("2;%s;%f;%f", effect->name, duration, time));
+	}
 }
 
 // disables modifier and executes it with LAST execute type
 void KrzyMod::DisableEffect(KrzyModEffect *effect) {
-	for (KrzyModActiveEffect &eff : activeEffects) {
-		if (eff.effect != effect) continue;
-		eff.Execute(LAST, false, effect);
-		break;
+	if (!modClient.JoinedAsHost() || !krzymod_host_spectator.GetBool()) {
+		for (KrzyModActiveEffect &eff : activeEffects) {
+			if (eff.effect != effect) continue;
+			eff.Execute(LAST, false, effect);
+			break;
+		}
 	}
 	activeEffects.remove_if([effect](const KrzyModActiveEffect &eff) -> bool {
 		return eff.effect == effect;
@@ -303,6 +349,15 @@ void KrzyMod::DisableEffect(KrzyModEffect *effect) {
 // adds modifier to the list of available modifiers. used only when initialized.
 void KrzyMod::AddEffect(KrzyModEffect* effect) {
 	effects.push_back(effect);
+}
+
+KrzyModEffect *KrzyMod::GetEffectByName(std::string name) {
+	for (KrzyModEffect *effect : krzyMod.effects) {
+		if (effect->name.compare(name) == 0) {
+			return effect;
+		}
+	}
+	return nullptr;
 }
 
 // gets next modifier in a queue and handles queue shuffling if needed.
@@ -338,6 +393,14 @@ bool KrzyMod::Vote(int num) {
 	return false;
 }
 
+void KrzyMod::TryCreateRoom(std::string server, int port) {
+	modClient.CreateRoom(server, port);
+}
+
+void KrzyMod::TryJoinRoom(std::string server, int port, int roomID) {
+	modClient.JoinRoom(server, port, roomID);
+}
+
 // adds convar controller
 void KrzyMod::AddConvarController(Variable convar, std::string newValue, float time, KrzyModEffect* parent) {
 	for (ConvarController &control : convarControllers) {
@@ -356,6 +419,7 @@ void KrzyMod::AddConvarController(Variable convar, std::string newValue, float t
 // Executed by Server::ProcessMovement
 void KrzyMod::InvokeProcessMovementEvents(CMoveData *moveData, bool preCall) {
 	if (!IsEnabled()) return;
+	if (modClient.JoinedAsHost() && krzymod_host_spectator.GetBool()) return;
 	for (KrzyModActiveEffect &eff : activeEffects) {
 		eff.Execute(PROCESS_MOVEMENT, preCall, moveData);
 	}
@@ -364,6 +428,7 @@ void KrzyMod::InvokeProcessMovementEvents(CMoveData *moveData, bool preCall) {
 // Executed by Client::OverrideCamera
 void KrzyMod::InvokeOverrideCameraEvents(CViewSetup *view) {
 	if (!IsEnabled()) return;
+	if (modClient.JoinedAsHost() && krzymod_host_spectator.GetBool()) return;
 	for (KrzyModActiveEffect &eff : activeEffects) {
 		eff.Execute(OVERRIDE_CAMERA, true, view);
 	}
@@ -371,6 +436,7 @@ void KrzyMod::InvokeOverrideCameraEvents(CViewSetup *view) {
 
 void KrzyMod::InvokeTraceRayEvents(CGameTrace *tr) {
 	if (!IsEnabled()) return;
+	if (modClient.JoinedAsHost() && krzymod_host_spectator.GetBool()) return;
 	for (KrzyModActiveEffect &eff : activeEffects) {
 		eff.Execute(TRACERAY, true, tr);
 	}
@@ -471,6 +537,8 @@ void KrzyMod::Paint(int slot) {
 	float dt = !IsEnabled() ? 0 : ((std::chrono::duration<float>)(std::chrono::high_resolution_clock::now() - lastUpdate)).count();
 
 	// drawing active effects
+	if (modClient.JoinedAsHost() && krzymod_host_spectator.GetBool()) return;
+
 	float fontPos = 0;
 	for (KrzyModActiveEffect &eff : activeEffects) {
 		const char *displayName = eff.effect->displayName.c_str();
@@ -524,14 +592,15 @@ CON_COMMAND_F_COMPLETION(krzymod_activate,
 	if (args.ArgC() != 2) {
 		return console->Print(krzymod_activate.ThisPtr()->m_pszHelpString);
 	}
-	for (KrzyModEffect *effect : krzyMod.effects) {
-		if (effect->name.compare(args[1]) == 0) {
-			krzyMod.ActivateEffect(effect);
-			console->Print("Activated effect \"%s\".\n", args[1]);
-			return;
-		}
+
+	auto effect = krzyMod.GetEffectByName(args[1]);
+
+	if (effect == nullptr) {
+		console->Print("Cannot find effect \"%s\".\n", args[1]);
+	} else {
+		krzyMod.ActivateEffect(effect);
+		console->Print("Activated effect \"%s\".\n", args[1]);
 	}
-	console->Print("Cannot find effect \"%s\".\n", args[1]);
 }
 
 
@@ -587,4 +656,29 @@ CON_COMMAND(krzymod_vote, "krzymod_vote [number] - votes for an effect with give
 	}
 	int voteNum = std::atoi(args[1]);
 	krzyMod.Vote(voteNum);
+}
+
+CON_COMMAND(krzymod_room_create, "krzymod_room_create [server] [port] - attempts to create room in given server") {
+	if (args.ArgC() != 3) {
+		return console->Print(krzymod_room_create.ThisPtr()->m_pszHelpString);
+	}
+
+	console->Print("Attempting to create a room in given KrzyMod server...");
+
+	int port = std::atoi(args[2]);
+
+	krzyMod.TryCreateRoom(args[1], port);
+}
+
+CON_COMMAND(krzymod_room_join, "krzymod_room_join [server] [port] [ID] - attempts to join room for given server") {
+	if (args.ArgC() != 4) {
+		return console->Print(krzymod_room_join.ThisPtr()->m_pszHelpString);
+	}
+
+	console->Print("Attempting to join KrzyMod server's room...");
+
+	int port = std::atoi(args[2]);
+	int roomID = std::atoi(args[3]);
+
+	krzyMod.TryJoinRoom(args[1], port, roomID);
 }

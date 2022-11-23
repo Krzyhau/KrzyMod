@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Variable.hpp"
+#include "KrzyModClient.hpp"
 #include "KrzyModEffect.hpp"
 #include "ConvarController.hpp"
 #include "Modules/VGui.hpp"
@@ -33,6 +34,8 @@ private:
 	TwitchConnection twitchCon;
 	std::vector<std::string> votingPeople;
 
+	KrzyModClient modClient;
+
 public:
 	std::vector<KrzyModEffect *> effects;
 	std::list<KrzyModActiveEffect> activeEffects;
@@ -48,15 +51,20 @@ public:
 	void Stop();
 	float GetTime(bool modified = false, bool scaled = false);
 	void ResetTimer();
+	void UpdateTimer(float timeBase, float currTimer);
 	void ActivateEffect(KrzyModEffect *effect);
+	void ActivateEffect(KrzyModEffect *effect, float duration, float time);
 	void DisableEffect(KrzyModEffect *effect);
 	void AddEffect(KrzyModEffect *effect);
-	
+	KrzyModEffect *GetEffectByName(std::string name);
 
 	void AddConvarController(Variable convar, std::string newValue, float time, KrzyModEffect *parent);
 	KrzyModEffect *GetNextEffect(bool increaseCounter = true);
 	void RandomizeEffectOrder();
 	bool Vote(int num);
+
+	void TryCreateRoom(std::string server, int port);
+	void TryJoinRoom(std::string server, int port, int roomID);
 
 	void InvokeProcessMovementEvents(CMoveData *moveData, bool preCall);
 	void InvokeOverrideCameraEvents(CViewSetup *view);

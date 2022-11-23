@@ -96,3 +96,18 @@ std::optional<Color> Utils::GetColor(const char *str, bool to_linear) {
 
 #undef RET
 }
+
+std::vector<std::string> Utils::SplitString(std::string str, std::string delimiter) {
+	std::vector<std::string> segments;
+
+	std::string s = str;
+	size_t pos = 0;
+	while ((pos = s.find(delimiter)) != std::string::npos) {
+		std::string token = s.substr(0, pos);
+		segments.push_back(token);
+		s.erase(0, pos + delimiter.length());
+	}
+	segments.push_back(s);
+
+	return segments;
+}

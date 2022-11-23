@@ -28,6 +28,7 @@ namespace Utils {
 	int ConvertFromSrgb(int s);
 	std::string GetPluginPath();
 	std::optional<Color> GetColor(const char *str, bool to_linear);
+	std::vector<std::string> SplitString(std::string str, std::string delimiter);
 }  // namespace Utils
 
 #define REDECL(name) \
