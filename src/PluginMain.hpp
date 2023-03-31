@@ -13,7 +13,7 @@
 #define PLUGIN_VAR_NAME krzymod
 #define PLUGIN_DESC "KrzyMod is a plugin adding a bunch of chaotic effects being executed on a timer."
 #define PLUGIN_BUILT __TIME__ " " __DATE__
-#define PLUGIN_WEB "https://nekzor.github.io/SourceAutoRecord or https://wiki.portal2.sr/SAR"
+#define PLUGIN_WEB "https://github.com/Krzyhau/KrzyMod"
 
 #define PLUGIN_SIGNATURE \
 	new char[26] { 75, 114, 122, 121, 77, 111, 100, 00 }

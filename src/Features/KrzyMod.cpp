@@ -725,7 +725,7 @@ CON_COMMAND_F_COMPLETION(krzymod_unblacklist, "krzymod_unblacklist [effect] - re
 
 CON_COMMAND_F_COMPLETION(krzymod_effectduration, "krzymod_effectduration [effect] <time> - shows or changes the default time multipler for given effect.\n", 0, AUTOCOMPLETION_FUNCTION(krzymod_activate)) {
 	if (args.ArgC() < 2 || args.ArgC() > 3) {
-		return console->Print(krzymod_unblacklist.ThisPtr()->m_pszHelpString);
+		return console->Print(krzymod_effectduration.ThisPtr()->m_pszHelpString);
 	}
 
 	auto effect = krzyMod.GetEffectByName(args[1]);
