@@ -31,6 +31,7 @@ public:
 	std::string displayName;
 	float durationMultiplier;
 	int groupID;
+	bool blacklisted = false;
 	//	modifiers can have different function types depending on the type, trusting the type variable
 	void (*function)(KrzyModExecInfo info);
 

@@ -203,7 +203,7 @@ void KrzyMod::Update() {
 						}
 					}
 				}
-			} while (groupMemberUsed && safetyCounter < effects.size() - 1);
+			} while ((groupMemberUsed || votes[i].effect->blacklisted) && safetyCounter < effects.size() - 1);
 			
 			
 		}
@@ -676,4 +676,68 @@ CON_COMMAND(krzymod_room_join, "krzymod_room_join [server] [port] [ID] - attempt
 	int roomID = std::atoi(args[3]);
 
 	krzyMod.TryJoinRoom(args[1], port, roomID);
+}
+
+CON_COMMAND_F_COMPLETION(krzymod_changename, "krzymod_changename [effect] [name] - changes the display name of the effect.\n", 0, AUTOCOMPLETION_FUNCTION(krzymod_activate)) {
+	if (args.ArgC() != 3) {
+		return console->Print(krzymod_changename.ThisPtr()->m_pszHelpString);
+	}
+
+	auto effect = krzyMod.GetEffectByName(args[1]);
+
+	if (effect == nullptr) {
+		console->Print("Cannot find effect \"%s\".\n", args[1]);
+	} else {
+		effect->displayName = std::string(args[2]);
+		console->Print("Changed the name of effect \"%s\" to \"%s\".\n", args[1], args[2]);
+	}
+}
+
+CON_COMMAND_F_COMPLETION(krzymod_blacklist, "krzymod_blacklist [effect] - blacklists effect with given name.\n", 0, AUTOCOMPLETION_FUNCTION(krzymod_activate)) {
+	if (args.ArgC() != 2) {
+		return console->Print(krzymod_blacklist.ThisPtr()->m_pszHelpString);
+	}
+
+	auto effect = krzyMod.GetEffectByName(args[1]);
+
+	if (effect == nullptr) {
+		console->Print("Cannot find effect \"%s\".\n", args[1]);
+	} else {
+		effect->blacklisted = true;
+		console->Print("Effect \"%s\" has been blacklisted.\n", args[1]);
+	}
+}
+
+CON_COMMAND_F_COMPLETION(krzymod_unblacklist, "krzymod_unblacklist [effect] - removes effect with given name from blacklist.\n", 0, AUTOCOMPLETION_FUNCTION(krzymod_activate)) {
+	if (args.ArgC() != 2) {
+		return console->Print(krzymod_unblacklist.ThisPtr()->m_pszHelpString);
+	}
+
+	auto effect = krzyMod.GetEffectByName(args[1]);
+
+	if (effect == nullptr) {
+		console->Print("Cannot find effect \"%s\".\n", args[1]);
+	} else {
+		effect->blacklisted = false;
+		console->Print("Effect \"%s\" has been removed from blacklist.\n", args[1]);
+	}
+}
+
+CON_COMMAND_F_COMPLETION(krzymod_effectduration, "krzymod_effectduration [effect] <time> - shows or changes the default time multipler for given effect.\n", 0, AUTOCOMPLETION_FUNCTION(krzymod_activate)) {
+	if (args.ArgC() < 2 || args.ArgC() > 3) {
+		return console->Print(krzymod_unblacklist.ThisPtr()->m_pszHelpString);
+	}
+
+	auto effect = krzyMod.GetEffectByName(args[1]);
+
+	if (effect == nullptr) {
+		console->Print("Cannot find effect \"%s\".\n", args[1]);
+	} else {
+		if (args.ArgC() == 3) {
+			effect->durationMultiplier = std::atof(args[2]);
+			console->Print("Duration multiplier for effect \"%s\" has been set to %f.\n", args[1], effect->durationMultiplier);
+		}
+		console->Print("Duration multiplier for effect \"%s\" is equal %f.\n", args[1], effect->durationMultiplier);
+		
+	}
 }
