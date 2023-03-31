@@ -16,5 +16,6 @@ void KrzyModActiveEffect::Update(float dt) {
 }
 
 void KrzyModActiveEffect::Execute(KrzyModExecType type, bool preCall, void *data) {
+	if (krzyMod.IsSpectator() && !effect->IsMeta()) return;
 	((void (*)(KrzyModExecInfo))effect->function)({type, preCall, time, duration, data});
 }

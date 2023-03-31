@@ -33,6 +33,8 @@ public:
 	int groupID;
 	//	modifiers can have different function types depending on the type, trusting the type variable
 	void (*function)(KrzyModExecInfo info);
+
+	bool IsMeta() { return name.find("meta") != std::string::npos; };
 };
 
 struct KrzyModActiveEffect {

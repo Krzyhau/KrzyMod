@@ -65,6 +65,7 @@ public:
 
 	void TryCreateRoom(std::string server, int port);
 	void TryJoinRoom(std::string server, int port, int roomID);
+	bool IsSpectator();
 
 	void InvokeProcessMovementEvents(CMoveData *moveData, bool preCall);
 	void InvokeOverrideCameraEvents(CViewSetup *view);
@@ -73,6 +74,20 @@ public:
 };
 
 extern KrzyMod krzyMod;
+
+extern Variable krzymod_enabled;
+extern Variable krzymod_time_base;
+extern Variable krzymod_timer_multiplier;
+extern Variable krzymod_primary_font;
+extern Variable krzymod_secondary_font;
+extern Variable krzymod_debug;
+extern Variable krzymod_ignore_pausing_locally;
+extern Variable krzymod_host_spectator;
+
+extern Variable krzymod_vote_enabled;
+extern Variable krzymod_vote_double_numbering;
+extern Variable krzymod_vote_channel;
+extern Variable krzymod_vote_proportional;
 
 
 #define CREATE_KRZYMOD(name, displayName, executionTime, groupID)                                                         \

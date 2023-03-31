@@ -322,9 +322,7 @@ void KrzyMod::ActivateEffect(KrzyModEffect* effect, float duration, float time) 
 	KrzyModActiveEffect activeEffect = {effect, time, duration};
 	activeEffects.push_back(activeEffect);
 
-	if (!modClient.JoinedAsHost() || !krzymod_host_spectator.GetBool()) {
-		activeEffect.Execute(INITIAL, true, effect);
-	}
+	activeEffect.Execute(INITIAL, true, effect);
 
 	if (modClient.JoinedAsHost()) {
 		modClient.SendData(Utils::ssprintf("2;%s;%f;%f", effect->name, duration, time));
@@ -333,12 +331,10 @@ void KrzyMod::ActivateEffect(KrzyModEffect* effect, float duration, float time) 
 
 // disables modifier and executes it with LAST execute type
 void KrzyMod::DisableEffect(KrzyModEffect *effect) {
-	if (!modClient.JoinedAsHost() || !krzymod_host_spectator.GetBool()) {
-		for (KrzyModActiveEffect &eff : activeEffects) {
-			if (eff.effect != effect) continue;
-			eff.Execute(LAST, false, effect);
-			break;
-		}
+	for (KrzyModActiveEffect &eff : activeEffects) {
+		if (eff.effect != effect) continue;
+		eff.Execute(LAST, false, effect);
+		break;
 	}
 	activeEffects.remove_if([effect](const KrzyModActiveEffect &eff) -> bool {
 		return eff.effect == effect;
@@ -401,6 +397,10 @@ void KrzyMod::TryJoinRoom(std::string server, int port, int roomID) {
 	modClient.JoinRoom(server, port, roomID);
 }
 
+bool KrzyMod::IsSpectator() {
+	return modClient.JoinedAsHost() && krzymod_host_spectator.GetBool();
+}
+
 // adds convar controller
 void KrzyMod::AddConvarController(Variable convar, std::string newValue, float time, KrzyModEffect* parent) {
 	for (ConvarController &control : convarControllers) {
@@ -419,7 +419,6 @@ void KrzyMod::AddConvarController(Variable convar, std::string newValue, float t
 // Executed by Server::ProcessMovement
 void KrzyMod::InvokeProcessMovementEvents(CMoveData *moveData, bool preCall) {
 	if (!IsEnabled()) return;
-	if (modClient.JoinedAsHost() && krzymod_host_spectator.GetBool()) return;
 	for (KrzyModActiveEffect &eff : activeEffects) {
 		eff.Execute(PROCESS_MOVEMENT, preCall, moveData);
 	}
@@ -428,7 +427,6 @@ void KrzyMod::InvokeProcessMovementEvents(CMoveData *moveData, bool preCall) {
 // Executed by Client::OverrideCamera
 void KrzyMod::InvokeOverrideCameraEvents(CViewSetup *view) {
 	if (!IsEnabled()) return;
-	if (modClient.JoinedAsHost() && krzymod_host_spectator.GetBool()) return;
 	for (KrzyModActiveEffect &eff : activeEffects) {
 		eff.Execute(OVERRIDE_CAMERA, true, view);
 	}
@@ -436,7 +434,6 @@ void KrzyMod::InvokeOverrideCameraEvents(CViewSetup *view) {
 
 void KrzyMod::InvokeTraceRayEvents(CGameTrace *tr) {
 	if (!IsEnabled()) return;
-	if (modClient.JoinedAsHost() && krzymod_host_spectator.GetBool()) return;
 	for (KrzyModActiveEffect &eff : activeEffects) {
 		eff.Execute(TRACERAY, true, tr);
 	}
@@ -458,7 +455,7 @@ void KrzyMod::Paint(int slot) {
 
 	// draw modifiers
 	for (KrzyModActiveEffect &eff : activeEffects) {
-		((void (*)(KrzyModExecInfo))eff.effect->function)({HUD_PAINT, true, eff.time, eff.duration});
+		eff.Execute(HUD_PAINT, true);
 	}
 
 	int xScreen, yScreen;
@@ -537,8 +534,6 @@ void KrzyMod::Paint(int slot) {
 	float dt = !IsEnabled() ? 0 : ((std::chrono::duration<float>)(std::chrono::high_resolution_clock::now() - lastUpdate)).count();
 
 	// drawing active effects
-	if (modClient.JoinedAsHost() && krzymod_host_spectator.GetBool()) return;
-
 	float fontPos = 0;
 	for (KrzyModActiveEffect &eff : activeEffects) {
 		const char *displayName = eff.effect->displayName.c_str();
